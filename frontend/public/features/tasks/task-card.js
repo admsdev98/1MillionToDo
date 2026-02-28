@@ -9,38 +9,25 @@ function toLocalDateKey(value = new Date()) {
 
 function getStatus(task) {
   if (task.is_completed) {
-    return { label: "Done", tone: "done" };
+    return { key: "done", tone: "done" };
   }
 
   const today = toLocalDateKey();
   if (task.due_date && task.due_date < today) {
-    return { label: "Overdue", tone: "overdue" };
+    return { key: "overdue", tone: "overdue" };
   }
 
-  return { label: "Open", tone: "open" };
+  return { key: "open", tone: "open" };
 }
 
-function formatDueDate(value) {
-  if (!value) {
-    return "";
-  }
-
-  const parsed = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-
-  return parsed.toLocaleDateString();
-}
-
-export function renderTaskCard(task, { onToggleComplete, onOpenDetails }) {
+export function renderTaskCard(task, { onToggleComplete, onOpenDetails, t }) {
   const isShared = task.access === "shared";
   const status = getStatus(task);
   const wrapper = el("article", {
     class: "task-card",
     role: "button",
     tabindex: "0",
-    "aria-label": `Open details for task ${task.title}`,
+    "aria-label": `${t("task.openDetailsAriaPrefix")} - ${task.title}`,
   });
   const head = el("div", { class: "task-card-head" });
 
@@ -63,34 +50,34 @@ export function renderTaskCard(task, { onToggleComplete, onOpenDetails }) {
 
   const pill = el("span", {
     class: `access-pill ${isShared ? "access-pill-shared" : "access-pill-owner"}`,
-    text: isShared ? "Shared" : "Owned",
+    text: isShared ? t("task.access.shared") : t("task.access.owned"),
   });
 
   head.append(left, pill);
 
   const desc = task.description ? el("p", { class: "task-description", text: task.description }) : null;
   const hint = isShared
-    ? el("p", { class: "task-hint", text: "Read-only task shared by another owner." })
-    : el("p", { class: "task-hint", text: "Owner task: completion can be updated." });
+    ? el("p", { class: "task-hint", text: t("task.readOnlyHint") })
+    : el("p", { class: "task-hint", text: t("task.ownerHint") });
 
   wrapper.append(head);
 
   const metaRow = el("div", { class: "task-meta-row" });
   const statusPill = el("span", {
     class: `task-status-pill task-status-pill-${status.tone}`,
-    text: status.label,
+    text: t(`task.status.${status.key}`),
   });
   metaRow.appendChild(statusPill);
 
   if (task.tag) {
-    metaRow.appendChild(el("span", { class: "task-tag-pill", text: task.tag }));
+    metaRow.appendChild(el("span", { class: "task-tag-pill", text: String(task.tag).toUpperCase() }));
   }
 
   if (task.due_date) {
     metaRow.appendChild(
       el("span", {
         class: "task-date-pill",
-        text: `Due ${formatDueDate(task.due_date)}`,
+        text: `${t("task.duePrefix")} ${task.due_date}`,
       })
     );
   }

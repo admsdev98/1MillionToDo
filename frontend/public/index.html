@@ -3,39 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>To Do</title>
+    <title>1Million ToDo</title>
     <link rel="stylesheet" href="/app.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-mark" aria-hidden="true">T</div>
-          <div class="brand-text">
-            <div class="brand-title">To Do</div>
-            <div class="brand-subtitle">Fastify + Postgres demo</div>
-          </div>
-        </div>
-
-        <nav class="nav" aria-label="Primary">
-          <button class="nav-btn" data-nav="dashboard" type="button">Dashboard</button>
-          <button class="nav-btn" data-nav="settings" type="button">Settings</button>
-          <button class="nav-btn" data-nav="logout" type="button">Logout</button>
-        </nav>
-      </header>
-
-      <main class="main">
-        <section class="card">
-          <div class="banner" role="status" aria-live="polite" id="banner"></div>
-          <div id="view-root"></div>
-        </section>
-
-        <footer class="footer">
-          <span>Contracts: snake_case JSON, access owner/shared</span>
-        </footer>
-      </main>
-    </div>
-
+    <div id="app-root"></div>
     <script type="module" src="/app.js"></script>
   </body>
 </html>

@@ -1,6 +1,20 @@
 import { listTasks, createTask, patchTask, deleteTask, shareTask } from "../features/tasks/tasks-api.js";
 import { renderTaskCard } from "../features/tasks/task-card.js";
 import { el, setBanner } from "./ui.js";
+import { formatT } from "../shared/i18n.js";
+
+const DEFAULT_TAGS_BY_LANGUAGE = {
+  es: ["TRABAJO", "PERSONAL", "URGENTE", "SEGUIMIENTO"],
+  en: ["WORK", "PERSONAL", "URGENT", "FOLLOW UP"],
+};
+
+function normalizeTag(rawValue) {
+  const clean = (rawValue || "").trim();
+  if (!clean) {
+    return null;
+  }
+  return clean.toUpperCase();
+}
 
 function shouldOpenForbidden(response) {
   return response.status === 401 || response.status === 403;
@@ -10,19 +24,26 @@ function shouldOpenUnexpected(response) {
   return response.status >= 500 || response.status === 0;
 }
 
-export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
+export function renderDashboardView(root, { apiFetch, navigate, onLogout, onToggleLanguage, t, language }) {
   root.innerHTML = "";
 
   const shell = el("div", { class: "dashboard-shell page-fade" });
   const header = el("header", { class: "dashboard-header" });
   const brand = el("a", { class: "brand-link", href: "/", "data-link": "true", text: "1Million ToDo" });
-  const nav = el("nav", { class: "dashboard-nav", "aria-label": "Dashboard" });
-  const homeLink = el("a", { class: "dashboard-link", href: "/", "data-link": "true", text: "Home" });
-  const appLink = el("a", { class: "dashboard-link dashboard-link-active", href: "/app", "data-link": "true", text: "Dashboard" });
-  const settingsLink = el("a", { class: "dashboard-link", href: "/app/settings", "data-link": "true", text: "Settings" });
-  const logoutButton = el("button", { class: "btn btn-ghost", type: "button", text: "Logout" });
+  const nav = el("nav", { class: "dashboard-nav", "aria-label": t("nav.dashboard") });
+  const homeLink = el("a", { class: "dashboard-link", href: "/", "data-link": "true", text: t("nav.home") });
+  const appLink = el("a", { class: "dashboard-link dashboard-link-active", href: "/app", "data-link": "true", text: t("nav.dashboard") });
+  const settingsLink = el("a", { class: "dashboard-link", href: "/app/settings", "data-link": "true", text: t("nav.settings") });
+  const languageToggle = el("button", {
+    class: "btn btn-language",
+    type: "button",
+    text: t("language.label"),
+  });
+  languageToggle.addEventListener("click", onToggleLanguage);
+
+  const logoutButton = el("button", { class: "btn btn-ghost", type: "button", text: t("nav.logout") });
   logoutButton.addEventListener("click", onLogout);
-  nav.append(homeLink, appLink, settingsLink, logoutButton);
+  nav.append(homeLink, appLink, settingsLink, languageToggle, logoutButton);
   header.append(brand, nav);
 
   const banner = el("div", {
@@ -37,45 +58,42 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
   const right = el("section", { class: "dashboard-panel dashboard-panel-muted" });
 
   const listHeading = el("div", { class: "dashboard-heading" }, [
-    el("h1", { class: "section-title", text: "Your tasks" }),
-    el("p", { class: "dashboard-subtitle", text: "Shared items are visible but remain read-only." }),
+    el("h1", { class: "section-title", text: t("dashboard.title") }),
+    el("p", { class: "dashboard-subtitle", text: t("dashboard.subtitle") }),
   ]);
 
-  const accountLine = el("p", { class: "dashboard-account-line", text: "Loading account details..." });
+  const accountLine = el("p", { class: "dashboard-account-line", text: t("dashboard.account.loading") });
   const listBox = el("div", { class: "task-list" });
   left.append(listHeading, accountLine, listBox);
 
-  const formHeading = el("h2", { class: "section-title", text: "Add a task" });
-  const formSubtitle = el("p", {
-    class: "dashboard-subtitle",
-    text: "Use PATCH updates for completion and keep snake_case contracts untouched.",
-  });
+  const formHeading = el("h2", { class: "section-title", text: t("task.create.title") });
+  const formSubtitle = el("p", { class: "dashboard-subtitle", text: t("task.create.subtitle") });
   const form = el("form", { class: "task-form" });
 
   const titleField = el("div", { class: "field" });
-  const titleLabel = el("label", { for: "new-title", text: "Title" });
+  const titleLabel = el("label", { for: "new-title", text: t("task.field.title") });
   const titleInput = el("input", {
     id: "new-title",
     name: "title",
     required: "true",
     maxlength: "200",
-    placeholder: "Prepare sprint demo",
+    placeholder: t("task.placeholder.title"),
   });
   titleField.append(titleLabel, titleInput);
 
   const descriptionField = el("div", { class: "field" });
-  const descriptionLabel = el("label", { for: "new-description", text: "Description (optional)" });
+  const descriptionLabel = el("label", { for: "new-description", text: t("task.field.description") });
   const descriptionInput = el("textarea", {
     id: "new-description",
     name: "description",
     rows: "4",
     maxlength: "4000",
-    placeholder: "Share endpoint + screenshots",
+    placeholder: t("task.placeholder.description"),
   });
   descriptionField.append(descriptionLabel, descriptionInput);
 
   const dueDateField = el("div", { class: "field" });
-  const dueDateLabel = el("label", { for: "new-due-date", text: "Due date (optional)" });
+  const dueDateLabel = el("label", { for: "new-due-date", text: t("task.field.dueDate") });
   const dueDateInput = el("input", {
     id: "new-due-date",
     name: "due_date",
@@ -84,29 +102,42 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
   dueDateField.append(dueDateLabel, dueDateInput);
 
   const tagField = el("div", { class: "field" });
-  const tagLabel = el("label", { for: "new-tag", text: "Tag (optional)" });
+  const tagLabel = el("label", { for: "new-tag", text: t("task.field.tag") });
   const tagInput = el("input", {
     id: "new-tag",
     name: "tag",
     maxlength: "60",
-    placeholder: "demo",
+    placeholder: t("task.placeholder.tag"),
+    list: "task-tag-options",
   });
   tagField.append(tagLabel, tagInput);
 
+  tagInput.addEventListener("blur", () => {
+    const next = normalizeTag(tagInput.value);
+    tagInput.value = next || "";
+  });
+
   const createShareField = el("div", { class: "field" });
-  const createShareLabel = el("label", { for: "new-share-email", text: "Share with email (optional)" });
+  const createShareLabel = el("label", { for: "new-share-email", text: t("task.field.shareEmail") });
   const createShareInput = el("input", {
     id: "new-share-email",
     name: "share_email",
     type: "email",
     autocomplete: "email",
-    placeholder: "friend@example.com",
+    placeholder: t("task.placeholder.shareEmail"),
   });
   createShareField.append(createShareLabel, createShareInput);
 
-  const submitButton = el("button", { class: "btn btn-primary btn-block", type: "submit", text: "Create task" });
+  const submitButton = el("button", { class: "btn btn-primary btn-block", type: "submit", text: t("task.action.create") });
   form.append(titleField, descriptionField, dueDateField, tagField, createShareField, submitButton);
   right.append(formHeading, formSubtitle, form);
+
+  const tagOptions = DEFAULT_TAGS_BY_LANGUAGE[language] || DEFAULT_TAGS_BY_LANGUAGE.es;
+  const tagDataList = el(
+    "datalist",
+    { id: "task-tag-options" },
+    tagOptions.map((value) => el("option", { value }))
+  );
 
   const modalBackdrop = el("div", {
     class: "task-modal-backdrop task-modal-backdrop-hidden",
@@ -119,19 +150,19 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
     "aria-labelledby": "task-modal-title",
   });
   const modalHeader = el("div", { class: "task-modal-header" }, [
-    el("h2", { id: "task-modal-title", class: "section-title", text: "Task details" }),
-    el("span", { class: "access-pill access-pill-owner", text: "Owned", id: "task-modal-access" }),
+    el("h2", { id: "task-modal-title", class: "section-title", text: t("task.details.title") }),
+    el("span", { class: "access-pill access-pill-owner", text: t("task.access.owned"), id: "task-modal-access" }),
   ]);
 
   const modalReadOnlyHint = el("p", {
     class: "task-hint",
-    text: "Shared tasks are read-only. You can view details but not edit or share.",
+    text: t("task.readOnlyHint"),
   });
 
   const modalForm = el("form", { class: "task-modal-form" });
 
   const modalTitleField = el("div", { class: "field" });
-  const modalTitleLabel = el("label", { for: "task-modal-title-input", text: "Title" });
+  const modalTitleLabel = el("label", { for: "task-modal-title-input", text: t("task.field.title") });
   const modalTitleInput = el("input", {
     id: "task-modal-title-input",
     name: "title",
@@ -143,7 +174,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
   const modalDescriptionField = el("div", { class: "field" });
   const modalDescriptionLabel = el("label", {
     for: "task-modal-description-input",
-    text: "Description (optional)",
+    text: t("task.field.description"),
   });
   const modalDescriptionInput = el("textarea", {
     id: "task-modal-description-input",
@@ -154,7 +185,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
   modalDescriptionField.append(modalDescriptionLabel, modalDescriptionInput);
 
   const modalDueDateField = el("div", { class: "field" });
-  const modalDueDateLabel = el("label", { for: "task-modal-due-date-input", text: "Due date (optional)" });
+  const modalDueDateLabel = el("label", { for: "task-modal-due-date-input", text: t("task.field.dueDate") });
   const modalDueDateInput = el("input", {
     id: "task-modal-due-date-input",
     name: "due_date",
@@ -163,33 +194,39 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
   modalDueDateField.append(modalDueDateLabel, modalDueDateInput);
 
   const modalTagField = el("div", { class: "field" });
-  const modalTagLabel = el("label", { for: "task-modal-tag-input", text: "Tag (optional)" });
+  const modalTagLabel = el("label", { for: "task-modal-tag-input", text: t("task.field.tag") });
   const modalTagInput = el("input", {
     id: "task-modal-tag-input",
     name: "tag",
     maxlength: "60",
-    placeholder: "demo",
+    placeholder: "",
+    list: "task-tag-options",
   });
   modalTagField.append(modalTagLabel, modalTagInput);
 
+  modalTagInput.addEventListener("blur", () => {
+    const next = normalizeTag(modalTagInput.value);
+    modalTagInput.value = next || "";
+  });
+
   const shareField = el("div", { class: "field" });
-  const shareLabel = el("label", { for: "task-modal-share-email", text: "Share by email" });
+  const shareLabel = el("label", { for: "task-modal-share-email", text: t("task.field.shareByEmail") });
   const shareRow = el("div", { class: "task-modal-inline" });
   const shareEmailInput = el("input", {
     id: "task-modal-share-email",
     name: "share_email",
     type: "email",
     autocomplete: "email",
-    placeholder: "friend@example.com",
+    placeholder: t("task.placeholder.shareEmail"),
   });
-  const shareButton = el("button", { class: "btn btn-ghost", type: "button", text: "Share" });
+  const shareButton = el("button", { class: "btn btn-ghost", type: "button", text: t("task.action.share") });
   shareRow.append(shareEmailInput, shareButton);
   shareField.append(shareLabel, shareRow);
 
   const modalActions = el("div", { class: "task-modal-actions" });
-  const closeButton = el("button", { class: "btn btn-ghost", type: "button", text: "Close" });
-  const deleteButton = el("button", { class: "btn btn-ghost", type: "button", text: "Delete" });
-  const saveButton = el("button", { class: "btn btn-primary", type: "submit", text: "Save changes" });
+  const closeButton = el("button", { class: "btn btn-ghost", type: "button", text: t("task.action.close") });
+  const deleteButton = el("button", { class: "btn btn-ghost", type: "button", text: t("task.action.delete") });
+  const saveButton = el("button", { class: "btn btn-primary", type: "submit", text: t("task.action.save") });
   modalActions.append(closeButton, deleteButton, saveButton);
 
   modalForm.append(
@@ -209,39 +246,39 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
     type: "button",
     "aria-expanded": "false",
     "aria-controls": "dashboard-help-panel",
-    text: "Help",
+    text: t("help.button"),
   });
 
   const helpPanel = el("aside", {
     class: "help-panel help-panel-hidden",
     id: "dashboard-help-panel",
-    "aria-label": "Dashboard help",
+    "aria-label": t("help.title"),
   });
   const helpHeader = el("div", { class: "help-panel-header" }, [
-    el("h2", { class: "section-title", text: "Quick help" }),
+    el("h2", { class: "section-title", text: t("help.title") }),
   ]);
-  const helpCloseButton = el("button", { class: "btn btn-ghost", type: "button", text: "Close" });
+  const helpCloseButton = el("button", { class: "btn btn-ghost", type: "button", text: t("help.close") });
   helpHeader.appendChild(helpCloseButton);
 
   const helpBody = el("div", { class: "help-panel-body" });
   const helpInstructions = el("ul", { class: "help-list" }, [
-    el("li", { text: "Click a task card to open details, edit, delete, or share it." }),
-    el("li", { text: "Shared tasks are always read-only for recipients." }),
-    el("li", { text: "Use due date and tag fields to make status badges easier to scan." }),
-    el("li", { text: "Settings lets you switch plan and review recent request logs." }),
+    el("li", { text: t("help.tip1") }),
+    el("li", { text: t("help.tip2") }),
+    el("li", { text: t("help.tip3") }),
+    el("li", { text: t("help.tip4") }),
   ]);
 
-  const demoUsersTitle = el("h3", { class: "help-subtitle", text: "Demo users (debug endpoint)" });
+  const demoUsersTitle = el("h3", { class: "help-subtitle", text: t("help.sampleAccounts.title") });
   const demoUsersState = el("p", {
     class: "dashboard-subtitle",
-    text: "Open this panel to try loading /v1/debug/users.",
+    text: "",
   });
   const demoUsersList = el("ul", { class: "help-list" });
   helpBody.append(helpInstructions, demoUsersTitle, demoUsersState, demoUsersList);
   helpPanel.append(helpHeader, helpBody);
 
   layout.append(left, right);
-  shell.append(header, banner, layout, modalBackdrop, helpButton, helpPanel);
+  shell.append(header, banner, layout, modalBackdrop, helpButton, helpPanel, tagDataList);
   root.appendChild(shell);
 
   const modalAccessBadge = modalHeader.querySelector("#task-modal-access");
@@ -253,11 +290,11 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
     modalTitleInput.value = task.title || "";
     modalDescriptionInput.value = task.description || "";
     modalDueDateInput.value = task.due_date || "";
-    modalTagInput.value = task.tag || "";
+    modalTagInput.value = task.tag ? String(task.tag).toUpperCase() : "";
     shareEmailInput.value = "";
 
     const isShared = task.access === "shared";
-    modalAccessBadge.textContent = isShared ? "Shared" : "Owned";
+    modalAccessBadge.textContent = isShared ? t("task.access.shared") : t("task.access.owned");
     modalAccessBadge.className = `access-pill ${isShared ? "access-pill-shared" : "access-pill-owner"}`;
 
     modalTitleInput.disabled = isShared;
@@ -289,25 +326,26 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
   });
 
   async function loadDemoUsers() {
+    demoUsersState.textContent = t("help.sampleAccounts.loading");
     const debugUsersResponse = await apiFetch("/v1/debug/users");
     demoUsersList.innerHTML = "";
 
     if (!debugUsersResponse.ok) {
       if (debugUsersResponse.status === 404) {
-        demoUsersState.textContent = "Debug users endpoint is disabled. Set ALLOW_DEBUG_ENDPOINTS=1 to enable demo users.";
+        demoUsersState.textContent = t("help.sampleAccounts.unavailable");
         return;
       }
 
-      demoUsersState.textContent = `Could not load debug users: ${debugUsersResponse.error.message}`;
+      demoUsersState.textContent = debugUsersResponse.error.message || t("help.sampleAccounts.unavailable");
       return;
     }
 
     if (!Array.isArray(debugUsersResponse.data) || debugUsersResponse.data.length === 0) {
-      demoUsersState.textContent = "Debug users endpoint is enabled, but no users were returned.";
+      demoUsersState.textContent = t("help.sampleAccounts.empty");
       return;
     }
 
-    demoUsersState.textContent = "Use these accounts to demo sharing and plan differences:";
+    demoUsersState.textContent = t("help.sampleAccounts.ready");
     for (const user of debugUsersResponse.data) {
       demoUsersList.appendChild(el("li", { text: `${user.email} (${user.plan})` }));
     }
@@ -356,11 +394,14 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
         return;
       }
 
-      accountLine.textContent = "Could not load account details.";
+      accountLine.textContent = t("dashboard.account.failed");
       return;
     }
 
-    accountLine.textContent = `Signed in as ${meResponse.data.email} - plan ${meResponse.data.plan}`;
+    accountLine.textContent = formatT("dashboard.account.line", {
+      email: meResponse.data.email,
+      plan: meResponse.data.plan,
+    });
   }
 
   async function loadTasks() {
@@ -386,7 +427,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
     listBox.innerHTML = "";
 
     if (!response.data || response.data.length === 0) {
-      listBox.appendChild(el("p", { class: "dashboard-empty", text: "No tasks yet. Create your first one on the right." }));
+      listBox.appendChild(el("p", { class: "dashboard-empty", text: t("dashboard.empty") }));
       return;
     }
 
@@ -416,6 +457,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
         onOpenDetails: () => {
           openModal(task);
         },
+        t,
       });
       listBox.appendChild(card);
     }
@@ -432,7 +474,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
       title: modalTitleInput.value.trim(),
       description: modalDescriptionInput.value.trim() || null,
       due_date: modalDueDateInput.value || null,
-      tag: modalTagInput.value.trim() || null,
+      tag: normalizeTag(modalTagInput.value),
     });
     saveButton.disabled = false;
 
@@ -453,7 +495,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
       return;
     }
 
-    setBanner(banner, { kind: "success", message: "Task updated." });
+    setBanner(banner, { kind: "success", message: t("task.banner.updated") });
     closeModal();
     await loadTasks();
   });
@@ -481,7 +523,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
       return;
     }
 
-    setBanner(banner, { kind: "success", message: "Task deleted." });
+    setBanner(banner, { kind: "success", message: t("task.banner.deleted") });
     closeModal();
     await loadTasks();
   });
@@ -493,7 +535,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
 
     const email = shareEmailInput.value.trim().toLowerCase();
     if (!email) {
-      setBanner(banner, { kind: "error", message: "Enter an email to share this task." });
+      setBanner(banner, { kind: "error", message: t("task.banner.shareNeedEmail") });
       return;
     }
 
@@ -518,7 +560,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
       return;
     }
 
-    setBanner(banner, { kind: "success", message: `Task shared with ${email}.` });
+    setBanner(banner, { kind: "success", message: formatT("task.banner.shared", { email }) });
     shareEmailInput.value = "";
   });
 
@@ -531,7 +573,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
       title: titleInput.value.trim(),
       description: descriptionInput.value.trim(),
       due_date: dueDateInput.value,
-      tag: tagInput.value.trim(),
+      tag: normalizeTag(tagInput.value),
     });
 
     submitButton.disabled = false;
@@ -553,7 +595,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
       return;
     }
 
-    let postCreateBanner = { kind: "success", message: "Task created." };
+    let postCreateBanner = { kind: "success", message: t("task.banner.created") };
     const shareEmail = createShareInput.value.trim().toLowerCase();
     if (shareEmail) {
       const shareAfterCreateResponse = await shareTask(apiFetch, createResponse.data.id, shareEmail);
@@ -572,10 +614,12 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout }) {
 
         postCreateBanner = {
           kind: "warning",
-          message: `Task created, but share failed: ${shareAfterCreateResponse.error.message}`,
+          message: formatT("task.banner.createdShareFailed", {
+            message: shareAfterCreateResponse.error.message,
+          }),
         };
       } else {
-        postCreateBanner = { kind: "success", message: `Task created and shared with ${shareEmail}.` };
+        postCreateBanner = { kind: "success", message: formatT("task.banner.createdShared", { email: shareEmail }) };
       }
     }
 

@@ -214,6 +214,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--spacing-4);
   padding: var(--spacing-4) var(--spacing-5);
   border-radius: var(--radius-card);
@@ -222,17 +223,30 @@ textarea {
   box-shadow: var(--shadow-soft);
 }
 
-.landing-nav,
-.dashboard-nav {
+.landing-nav {
   display: none;
   align-items: center;
   gap: var(--spacing-4);
+}
+
+.dashboard-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
 }
 
 .landing-nav-link,
 .dashboard-link {
   text-decoration: none;
   color: var(--color-muted);
+  padding: 10px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.dashboard-link:hover {
+  background: rgba(4, 39, 79, 0.04);
 }
 
 .dashboard-link-active {
@@ -633,6 +647,8 @@ textarea {
   background: rgba(10, 132, 255, 0.1);
   border-color: rgba(10, 132, 255, 0.2);
   color: #0a4e92;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .task-date-pill {

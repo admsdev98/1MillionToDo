@@ -20,10 +20,22 @@ export async function apiFetch(path, options = {}) {
     headers.set("authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(path, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(path, {
+      ...options,
+      headers,
+    });
+  } catch {
+    return {
+      ok: false,
+      status: 0,
+      error: {
+        code: "NETWORK_ERROR",
+        message: "Network request failed",
+      },
+    };
+  }
 
   const rawText = await response.text();
   const data = rawText ? safeJsonParse(rawText) : null;

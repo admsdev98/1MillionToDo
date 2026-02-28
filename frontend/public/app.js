@@ -80,6 +80,7 @@ function toggleLanguageAndRerender() {
 async function renderCurrentRoute() {
   const route = resolveRoute(window.location.pathname);
   const isAuthenticated = Boolean(authStore.getToken());
+  const language = getLanguage();
 
   if ((route.id === "dashboard" || route.id === "settings") && !isAuthenticated) {
     navigate("/auth/login", { replace: true });
@@ -95,7 +96,7 @@ async function renderCurrentRoute() {
     renderLandingView(appRoot, {
       isAuthenticated,
       onLogout: logoutAndGoToLanding,
-      language: getLanguage(),
+      language,
       onToggleLanguage: toggleLanguageAndRerender,
       t,
     });
@@ -107,7 +108,7 @@ async function renderCurrentRoute() {
       mode: "login",
       authStore,
       navigate,
-      language: getLanguage(),
+      language,
       onToggleLanguage: toggleLanguageAndRerender,
       t,
     });
@@ -119,7 +120,7 @@ async function renderCurrentRoute() {
       mode: "register",
       authStore,
       navigate,
-      language: getLanguage(),
+      language,
       onToggleLanguage: toggleLanguageAndRerender,
       t,
     });
@@ -127,7 +128,13 @@ async function renderCurrentRoute() {
   }
 
   if (route.id === "auth-request-password") {
-    renderPasswordRequestPlaceholderView(appRoot, { navigate });
+    renderPasswordRequestPlaceholderView(appRoot, {
+      apiFetch,
+      navigate,
+      language,
+      onToggleLanguage: toggleLanguageAndRerender,
+      t,
+    });
     return;
   }
 
@@ -137,6 +144,9 @@ async function renderCurrentRoute() {
       authStore,
       navigate,
       onLogout: logoutAndGoToLanding,
+      language,
+      onToggleLanguage: toggleLanguageAndRerender,
+      t,
     });
     return;
   }
@@ -146,6 +156,9 @@ async function renderCurrentRoute() {
       apiFetch,
       navigate,
       onLogout: logoutAndGoToLanding,
+      language,
+      onToggleLanguage: toggleLanguageAndRerender,
+      t,
     });
     return;
   }
@@ -155,6 +168,7 @@ async function renderCurrentRoute() {
       kind: "forbidden",
       navigate,
       isAuthenticated,
+      t,
     });
     return;
   }
@@ -165,6 +179,7 @@ async function renderCurrentRoute() {
       navigate,
       isAuthenticated,
       details: window.history.state && window.history.state.message,
+      t,
     });
     return;
   }
@@ -173,6 +188,7 @@ async function renderCurrentRoute() {
     kind: "not-found",
     navigate,
     isAuthenticated,
+    t,
   });
 }
 
@@ -185,7 +201,7 @@ window.addEventListener("unhandledrejection", () => {
   navigate("/error/unexpected", {
     replace: true,
     state: {
-      message: "An unexpected error happened while loading this page.",
+      message: t("error.unexpected.defaultDetails"),
     },
   });
 });
