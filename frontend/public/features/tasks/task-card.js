@@ -34,7 +34,7 @@ export function renderTaskCard(task, { onToggleComplete, onOpenDetails, t }) {
   const left = el("div", { class: "task-main" });
   const checkbox = el("input", {
     type: "checkbox",
-    "aria-label": `Mark task ${task.title} as complete`,
+    "aria-label": `${t("task.checkboxAriaPrefix")}: ${task.title}`,
   });
   checkbox.checked = Boolean(task.is_completed);
   checkbox.disabled = isShared;

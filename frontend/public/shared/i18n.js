@@ -109,6 +109,7 @@ const DICTIONARY = {
     "task.status.overdue": "Overdue",
     "task.duePrefix": "Due",
     "task.openDetailsAriaPrefix": "Open details",
+    "task.checkboxAriaPrefix": "Mark as done",
 
     "settings.title": "Settings",
     "settings.subtitle": "Update your plan and review recent activity.",
@@ -266,6 +267,7 @@ const DICTIONARY = {
     "task.status.overdue": "Vencida",
     "task.duePrefix": "Vence",
     "task.openDetailsAriaPrefix": "Abrir detalles",
+    "task.checkboxAriaPrefix": "Marcar como hecha",
 
     "settings.title": "Ajustes",
     "settings.subtitle": "Cambia el plan y revisa actividad reciente.",
