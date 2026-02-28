@@ -1,44 +1,45 @@
-# Sprint 02: reset, sharing, limits, frontend, docs, and hardening
+# Sprint 05: final dashboard and settings UI delivery
 
 **Status**: completed
 **Started**: 2026-02-28
 **Completed**: 2026-02-28
-**Goal**: Complete Sprint 02 with one stable API contract across backend, frontend, and docs before endpoint-heavy implementation begins.
+**Goal**: Deliver the missing ToDo UI functionality for task details/edit/delete/share, richer previews and create form, settings route, and floating help panel.
 
 ## Canonical source
-- This file is the canonical Sprint 02 plan.
-- Execution scope is defined by this file plus cards in `docs/exec-plans/pending/`, `docs/exec-plans/active/`, and `docs/exec-plans/completed/`.
-- Sprint 01 history is archived in `docs/exec-plans/completed/sprint-01/SPRINT.md`.
+- This file is the canonical Sprint 05 plan.
+- Sprint 04 history is archived in `docs/exec-plans/completed/sprint-04/SPRINT.md`.
 
-## Cards (Sprint 02)
-- [x] BACK-CARD-010: hardening validation, error shapes, and security basics
-- [x] BACK-CARD-005: subscription plans, task caps, and rate limiting
-- [x] BACK-CARD-007: password reset demo flow request token and reset
-- [x] BACK-CARD-008: task sharing endpoints and read-only recipients
-- [x] FRONT-CARD-006: minimal frontend login, dashboard, and settings
-- [x] DOCS-CARD-009: bilingual run instructions and api examples
+## Scope
+- Frontend-only UX completion for dashboard and settings routes.
+- No new dependencies.
+- Use current backend endpoints as-is.
+
+## Cards
+- [x] FRONT-CARD-023: add task detail modal with edit, delete, and share
+- [x] FRONT-CARD-024: show task status, tag, and due date in task cards
+- [x] FRONT-CARD-025: upgrade create task form with due date, tag, and share email
+- [x] FRONT-CARD-026: add settings route with plan and request logs
+- [x] FRONT-CARD-027: add floating help panel for demo users and sharing
 
 ## Recommended execution order
-1. BACK-CARD-010 (quality gate and contract first)
-2. BACK-CARD-005 (plan and limit contracts used by later cards)
-3. BACK-CARD-007 (reset flow with contract-aligned payloads)
-4. BACK-CARD-008 (sharing rules and read-only contract)
-5. FRONT-CARD-006 (consume final contracts)
-6. DOCS-CARD-009 (document final verified behavior)
-
-## Cross-card decisions / quality gates
-- JSON request/response payloads use `snake_case`.
-- Shared-task marker is `access` with values `owner` or `shared`.
-- Plan enforcement is always resolved from database state, not from JWT `plan` claims.
-- All routes touched in Sprint 02 must define Fastify schemas for params/body/response.
-- Error responses must follow one shape: `{ "error": { "code": "...", "message": "..." } }`.
-- Error codes must be stable and include at least: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `RATE_LIMITED`, and `PLAN_LIMIT_REACHED`.
-- Postgres setup must document `pgcrypto` prerequisite and volume reset behavior after migration changes.
+1. FRONT-CARD-023
+2. FRONT-CARD-024
+3. FRONT-CARD-025
+4. FRONT-CARD-026
+5. FRONT-CARD-027
 
 ## Definition of done
-- All six Sprint 02 cards are completed and moved to `docs/exec-plans/completed/` with evidence.
-- Sprint 02 endpoints and frontend flows use only `snake_case` JSON fields.
-- Shared tasks are read-only for recipients and expose `access: "shared"` consistently.
-- Plan limits and rate limiting use database-backed plan decisions and return contract-stable errors.
-- Invalid requests, auth failures, forbidden actions, not found routes, and rate-limit events return the standard error shape and expected HTTP status codes.
-- README docs in English and Spanish match the implemented contracts, including `pgcrypto` and Docker volume notes.
+- Task cards are clickable and open a detail modal.
+- Owned tasks can be edited, deleted, and shared by email from the modal.
+- Shared tasks are clearly read-only in cards and modal.
+- Task previews show status (Open/Done/Overdue), tag, and due date.
+- Create task flow supports description textarea, due date, tag, and optional share email with partial-success feedback.
+- `/app/settings` route is auth-gated and supports plan updates and request log viewing.
+- Dashboard includes a floating help panel that tries `/v1/debug/users` and degrades gracefully when unavailable.
+- Each completed card includes evidence under `docs/exec-plans/completed/sprint-05/evidence/`.
+
+## Manual regression checklist
+- Login -> dashboard -> create/edit/delete/share task still works.
+- Shared task remains read-only in list and modal.
+- Settings route loads, updates plan, and renders request logs.
+- Help panel opens/closes and handles debug endpoint unavailable state.

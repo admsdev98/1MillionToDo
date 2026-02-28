@@ -132,3 +132,27 @@ Entry template:
 - Alternative rejected: Add `@fastify/helmet` (rejected to keep dependencies aligned with the locked stack).
 - Evidence: `backend/src/plugins/security-headers.js`, `backend/src/config.js`, and `docs/exec-plans/completed/sprint-02/evidence/api/s02-health.txt`.
 - Next: Keep error code contracts stable by using `error.errorCode` when needed (implemented in `backend/src/app.js`).
+
+- Date: 2026-02-28
+- Card: SPRINT-04-PLANNING
+- Decision: Create Sprint 04 to finish missing frontend MVP functionality and add minimal DB/API support (due dates, tags, register plan, in-app logs).
+- Why: The UI requirements require data fields and endpoints that do not exist yet; keeping them in one sprint avoids partial UX.
+- Alternative rejected: Implement UI only with placeholders (rejected because it would misrepresent capabilities and increase rework).
+- Evidence: `docs/exec-plans/SPRINT.md` and Sprint 04 cards in `docs/exec-plans/pending/`.
+- Next: Start with BACK-CARD-017, then DB-CARD-018, then BACK-CARD-019.
+
+- Date: 2026-02-28
+- Card: DB-CARD-018
+- Decision: Implement task due dates as a date-only value (`YYYY-MM-DD`) stored as Postgres `date`.
+- Why: The requirement is a deadline day; date-only avoids timezone bugs and simplifies the UI.
+- Alternative rejected: Use `timestamptz` (rejected because timezones add complexity for MVP).
+- Evidence: `docs/exec-plans/SPRINT.md` decisions section and `docs/exec-plans/pending/DB-CARD-018-add-due-date-and-tag-to-tasks-table.md`.
+- Next: Extend the task API schema and payloads to accept/return `due_date`.
+
+- Date: 2026-02-28
+- Card: FRONT-CARD-022
+- Decision: Cancel CARD-022 and split it into FRONT-CARD-023 through FRONT-CARD-027 for Sprint 05.
+- Why: CARD-022 mixed five UI deliverables, making verification and one-card kanban execution too risky.
+- Alternative rejected: Keep one large card and finish it in one pass (rejected because acceptance evidence would be weak and failures would be harder to isolate).
+- Evidence: `docs/exec-plans/completed/sprint-04/FRONT-CARD-022-add-dashboard-modals-edit-delete-status-settings-and-help.md` and new cards in `docs/exec-plans/pending/`.
+- Next: Execute Sprint 05 cards in order (023 -> 027) with per-card evidence files.
