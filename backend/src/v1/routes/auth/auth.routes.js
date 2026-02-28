@@ -1,6 +1,7 @@
 const { hashPassword, verifyPassword } = require("../../../lib/password-scrypt");
 const passwordResetRoutes = require("./password-reset.routes");
 const { toHttpError } = require("../../../lib/http-error");
+const { isValidPlan } = require("../../../lib/plan-limits");
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -11,6 +12,17 @@ const credentialsSchema = {
   properties: {
     email: { type: "string", format: "email", maxLength: 320 },
     password: { type: "string", minLength: MIN_PASSWORD_LENGTH, maxLength: 256 },
+  },
+};
+
+const registerSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["email", "password"],
+  properties: {
+    email: { type: "string", format: "email", maxLength: 320 },
+    password: { type: "string", minLength: MIN_PASSWORD_LENGTH, maxLength: 256 },
+    plan: { type: "string", enum: ["free", "premium", "enterprise"] },
   },
 };
 
@@ -37,7 +49,7 @@ async function authRoutes(fastify) {
     {
       preHandler: [fastify.rateLimitUnauthenticated],
       schema: {
-        body: credentialsSchema,
+        body: registerSchema,
         response: {
           201: tokenResponseSchema,
         },
@@ -46,16 +58,29 @@ async function authRoutes(fastify) {
     async (request, reply) => {
       const email = request.body.email.trim().toLowerCase();
       const password = request.body.password;
+      const plan = request.body.plan;
+
+      if (plan && !isValidPlan(plan)) {
+        throw toHttpError(400, "Invalid plan", "VALIDATION_ERROR");
+      }
+
       const { passwordHash, passwordSalt } = await hashPassword(password);
 
       let user;
       try {
-        const result = await fastify.db.query(
-          `INSERT INTO users (email, password_hash, password_salt)
-           VALUES ($1, $2, $3)
-           RETURNING id, email, plan`,
-          [email, passwordHash, passwordSalt]
-        );
+        const result = plan
+          ? await fastify.db.query(
+              `INSERT INTO users (email, password_hash, password_salt, plan)
+               VALUES ($1, $2, $3, $4)
+               RETURNING id, email, plan`,
+              [email, passwordHash, passwordSalt, plan]
+            )
+          : await fastify.db.query(
+              `INSERT INTO users (email, password_hash, password_salt)
+               VALUES ($1, $2, $3)
+               RETURNING id, email, plan`,
+              [email, passwordHash, passwordSalt]
+            );
 
         user = result.rows[0];
       } catch (error) {

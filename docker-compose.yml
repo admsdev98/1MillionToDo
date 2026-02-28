@@ -21,6 +21,7 @@ services:
       # This is a demo value (not a real secret). Override via env for anything serious.
       JWT_SECRET: ${JWT_SECRET:-dev-insecure-change-this}
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@db:5432/todo_app}
+      ALLOW_DEBUG_ENDPOINTS: ${ALLOW_DEBUG_ENDPOINTS:-0}
     ports:
       - "3000:3000"
     depends_on:

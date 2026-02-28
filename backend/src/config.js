@@ -20,6 +20,7 @@ function readConfig(env = process.env) {
   const databaseUrl = env.DATABASE_URL || DEFAULT_DATABASE_URL;
   const jwtSecret = env.JWT_SECRET || DEFAULT_JWT_SECRET;
   const nodeEnv = env.NODE_ENV || "development";
+  const allowDebugEndpoints = env.ALLOW_DEBUG_ENDPOINTS === "1";
 
   if (nodeEnv === "production") {
     if (!env.JWT_SECRET) {
@@ -36,6 +37,7 @@ function readConfig(env = process.env) {
     port,
     databaseUrl,
     jwtSecret,
+    allowDebugEndpoints,
   };
 }
 

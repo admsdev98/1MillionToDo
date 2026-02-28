@@ -5,11 +5,22 @@ const path = require("node:path");
 const CONTENT_TYPES = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
   ".js": "application/javascript; charset=utf-8",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
   ".json": "application/json; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
 };
+
+function looksLikeAssetRequest(relativePath) {
+  const cleanPath = (relativePath || "").split("?")[0].split("#")[0];
+  return path.extname(cleanPath) !== "";
+}
 
 async function getSafeFilePath(frontendRoot, relativePath) {
   const normalizedPath = path.normalize(relativePath).replace(/^([.]{2}[/\\])+/, "");
@@ -83,6 +94,11 @@ async function serveFrontendAssetsPlugin(fastify) {
 
     if (filePath) {
       return sendFile(reply, filePath);
+    }
+
+    if (looksLikeAssetRequest(wildcardPath)) {
+      reply.callNotFound();
+      return;
     }
 
     return sendFile(reply, indexPath);

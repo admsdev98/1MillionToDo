@@ -21,6 +21,18 @@ const meResponseSchema = {
   },
 };
 
+const requestLogSchema = {
+  type: "object",
+  required: ["timestamp", "method", "url", "statusCode", "executionTimeMs"],
+  properties: {
+    timestamp: { type: "string" },
+    method: { type: "string" },
+    url: { type: "string" },
+    statusCode: { type: "integer" },
+    executionTimeMs: { type: "number" },
+  },
+};
+
 async function meRoutes(fastify) {
   fastify.get(
     "/me",
@@ -77,6 +89,25 @@ async function meRoutes(fastify) {
       }
 
       return updated;
+    }
+  );
+
+  fastify.get(
+    "/me/request-logs",
+    {
+      preHandler: [fastify.authenticate, fastify.rateLimitAuthenticated],
+      schema: {
+        response: {
+          200: {
+            type: "array",
+            items: requestLogSchema,
+          },
+        },
+      },
+    },
+    async (request) => {
+      const userId = request.user.userId || request.user.sub;
+      return fastify.requestLogs.list(userId);
     }
   );
 }

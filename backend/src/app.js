@@ -8,6 +8,7 @@ const requestLoggerPlugin = require("./plugins/request-logger");
 const securityHeadersPlugin = require("./plugins/security-headers");
 const serveFrontendAssetsPlugin = require("./plugins/serve-frontend-assets");
 const authRoutes = require("./v1/routes/auth/auth.routes");
+const debugRoutes = require("./v1/routes/debug/debug.routes");
 const meRoutes = require("./v1/routes/me/me.routes");
 const tasksRoutes = require("./v1/routes/tasks/tasks.routes");
 const taskSharingRoutes = require("./v1/routes/tasks/task-sharing.routes");
@@ -91,6 +92,12 @@ async function buildApp(options = {}) {
   app.register(authRoutes, {
     prefix: "/v1/auth",
   });
+
+  if (config.allowDebugEndpoints) {
+    app.register(debugRoutes, {
+      prefix: "/v1/debug",
+    });
+  }
 
   app.register(meRoutes, {
     prefix: "/v1",
