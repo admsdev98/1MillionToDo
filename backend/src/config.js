@@ -19,9 +19,20 @@ function readConfig(env = process.env) {
   const port = parsePort(env.PORT);
   const databaseUrl = env.DATABASE_URL || DEFAULT_DATABASE_URL;
   const jwtSecret = env.JWT_SECRET || DEFAULT_JWT_SECRET;
+  const nodeEnv = env.NODE_ENV || "development";
+
+  if (nodeEnv === "production") {
+    if (!env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is required in production");
+    }
+
+    if (jwtSecret === DEFAULT_JWT_SECRET) {
+      throw new Error("JWT_SECRET must be changed in production");
+    }
+  }
 
   return {
-    nodeEnv: env.NODE_ENV || "development",
+    nodeEnv,
     port,
     databaseUrl,
     jwtSecret,

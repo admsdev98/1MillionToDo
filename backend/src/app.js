@@ -3,12 +3,22 @@ const Fastify = require("fastify");
 const { readConfig } = require("./config");
 const dbPlugin = require("./plugins/db");
 const jwtPlugin = require("./plugins/jwt");
+const rateLimitPlugin = require("./plugins/rate-limit");
 const requestLoggerPlugin = require("./plugins/request-logger");
+const securityHeadersPlugin = require("./plugins/security-headers");
 const serveFrontendAssetsPlugin = require("./plugins/serve-frontend-assets");
 const authRoutes = require("./v1/routes/auth/auth.routes");
+const meRoutes = require("./v1/routes/me/me.routes");
 const tasksRoutes = require("./v1/routes/tasks/tasks.routes");
+const taskSharingRoutes = require("./v1/routes/tasks/task-sharing.routes");
 
 function toErrorCode(error, statusCode) {
+  // Routes/plugins can set `error.errorCode` to force a stable contract code
+  // (e.g. PLAN_LIMIT_REACHED) without relying on status-code guessing.
+  if (error && typeof error.errorCode === "string") {
+    return error.errorCode;
+  }
+
   if (error.validation) {
     return "VALIDATION_ERROR";
   }
@@ -17,8 +27,16 @@ function toErrorCode(error, statusCode) {
     return "UNAUTHORIZED";
   }
 
+  if (statusCode === 403) {
+    return "FORBIDDEN";
+  }
+
   if (statusCode === 404) {
     return "NOT_FOUND";
+  }
+
+  if (statusCode === 429) {
+    return "RATE_LIMITED";
   }
 
   if (statusCode === 409) {
@@ -60,7 +78,11 @@ async function buildApp(options = {}) {
     jwtSecret: config.jwtSecret,
   });
 
+  await rateLimitPlugin(app);
+
   await requestLoggerPlugin(app);
+
+  await securityHeadersPlugin(app);
 
   app.get("/v1/health", async () => {
     return { ok: true };
@@ -70,7 +92,15 @@ async function buildApp(options = {}) {
     prefix: "/v1/auth",
   });
 
+  app.register(meRoutes, {
+    prefix: "/v1",
+  });
+
   app.register(tasksRoutes, {
+    prefix: "/v1/tasks",
+  });
+
+  app.register(taskSharingRoutes, {
     prefix: "/v1/tasks",
   });
 

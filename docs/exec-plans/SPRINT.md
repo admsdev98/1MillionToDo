@@ -1,37 +1,44 @@
-# Sprint 01: runnable api with auth and tasks
+# Sprint 02: reset, sharing, limits, frontend, docs, and hardening
 
 **Status**: completed
 **Started**: 2026-02-28
-**Goal**: Ship a runnable Dockerized API (db + backend) with JWT register/login, request logging, and owned-task CRUD with strict per-user isolation.
+**Completed**: 2026-02-28
+**Goal**: Complete Sprint 02 with one stable API contract across backend, frontend, and docs before endpoint-heavy implementation begins.
+
+## Canonical source
+- This file is the canonical Sprint 02 plan.
+- Execution scope is defined by this file plus cards in `docs/exec-plans/pending/`, `docs/exec-plans/active/`, and `docs/exec-plans/completed/`.
+- Sprint 01 history is archived in `docs/exec-plans/completed/sprint-01/SPRINT.md`.
+
+## Cards (Sprint 02)
+- [x] BACK-CARD-010: hardening validation, error shapes, and security basics
+- [x] BACK-CARD-005: subscription plans, task caps, and rate limiting
+- [x] BACK-CARD-007: password reset demo flow request token and reset
+- [x] BACK-CARD-008: task sharing endpoints and read-only recipients
+- [x] FRONT-CARD-006: minimal frontend login, dashboard, and settings
+- [x] DOCS-CARD-009: bilingual run instructions and api examples
+
+## Recommended execution order
+1. BACK-CARD-010 (quality gate and contract first)
+2. BACK-CARD-005 (plan and limit contracts used by later cards)
+3. BACK-CARD-007 (reset flow with contract-aligned payloads)
+4. BACK-CARD-008 (sharing rules and read-only contract)
+5. FRONT-CARD-006 (consume final contracts)
+6. DOCS-CARD-009 (document final verified behavior)
+
+## Cross-card decisions / quality gates
+- JSON request/response payloads use `snake_case`.
+- Shared-task marker is `access` with values `owner` or `shared`.
+- Plan enforcement is always resolved from database state, not from JWT `plan` claims.
+- All routes touched in Sprint 02 must define Fastify schemas for params/body/response.
+- Error responses must follow one shape: `{ "error": { "code": "...", "message": "..." } }`.
+- Error codes must be stable and include at least: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `RATE_LIMITED`, and `PLAN_LIMIT_REACHED`.
+- Postgres setup must document `pgcrypto` prerequisite and volume reset behavior after migration changes.
 
 ## Definition of done
-- `docker compose up --build` starts `db` and `api` without crashing.
-- Migration runs on a clean database and creates the required tables.
-- `/v1/health` returns 200.
-- Register/login returns a JWT; authenticated requests work.
-- Tasks CRUD works for owned tasks; cross-user access is blocked.
-
-## What's included
-- Database schema (users + tasks + sharing tables + reset tokens) applied via migration.
-- Fastify skeleton: config, pg pool, JWT plugin, request logger, health route.
-- Auth: register + login (JWT) using `crypto.scrypt` salted hashing.
-- Tasks: owned-task CRUD (PATCH for updates) with strict multi-tenancy.
-
-## What's NOT included
-- Password reset demo endpoints (planned for Sprint 02).
-- Task sharing endpoints and shared-recipient read-only rules (planned for Sprint 02).
-- Subscription plan endpoints, task caps, and rate limiting (planned for Sprint 02).
-- Frontend UI (planned for Sprint 02).
-- Expanded bilingual runbook/API examples (planned for Sprint 02).
-
-## Dependencies (suggested order)
-1. DB-CARD-001 (schema must exist before API work can be verified).
-2. BACK-CARD-002 (app skeleton + plugins + health + logging).
-3. BACK-CARD-003 (JWT auth needed for protected routes).
-4. BACK-CARD-004 (tasks CRUD relies on auth + db).
-
-## Cards
-- [x] DB-CARD-001: create postgres schema for users, tasks, shares, and password reset
-- [x] BACK-CARD-002: bootstrap fastify app with db, jwt, and request logger
-- [x] BACK-CARD-003: implement jwt register and login endpoints
-- [x] BACK-CARD-004: implement owned tasks crud with strict multi-tenancy
+- All six Sprint 02 cards are completed and moved to `docs/exec-plans/completed/` with evidence.
+- Sprint 02 endpoints and frontend flows use only `snake_case` JSON fields.
+- Shared tasks are read-only for recipients and expose `access: "shared"` consistently.
+- Plan limits and rate limiting use database-backed plan decisions and return contract-stable errors.
+- Invalid requests, auth failures, forbidden actions, not found routes, and rate-limit events return the standard error shape and expected HTTP status codes.
+- README docs in English and Spanish match the implemented contracts, including `pgcrypto` and Docker volume notes.

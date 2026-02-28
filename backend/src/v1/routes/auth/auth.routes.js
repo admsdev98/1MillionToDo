@@ -1,4 +1,6 @@
 const { hashPassword, verifyPassword } = require("../../../lib/password-scrypt");
+const passwordResetRoutes = require("./password-reset.routes");
+const { toHttpError } = require("../../../lib/http-error");
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -20,12 +22,6 @@ const tokenResponseSchema = {
   },
 };
 
-function toHttpError(statusCode, message) {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-}
-
 function toTokenPayload(user) {
   return {
     sub: user.id,
@@ -39,6 +35,7 @@ async function authRoutes(fastify) {
   fastify.post(
     "/register",
     {
+      preHandler: [fastify.rateLimitUnauthenticated],
       schema: {
         body: credentialsSchema,
         response: {
@@ -77,6 +74,7 @@ async function authRoutes(fastify) {
   fastify.post(
     "/login",
     {
+      preHandler: [fastify.rateLimitUnauthenticated],
       schema: {
         body: credentialsSchema,
         response: {
@@ -109,6 +107,9 @@ async function authRoutes(fastify) {
       return { token };
     }
   );
+
+  // Demo password reset flow (token returned in response).
+  fastify.register(passwordResetRoutes);
 }
 
 module.exports = authRoutes;

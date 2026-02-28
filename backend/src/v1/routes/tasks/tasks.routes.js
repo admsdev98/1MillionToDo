@@ -1,6 +1,10 @@
+const { getTaskCapForPlan } = require("../../../lib/plan-limits");
+const { getUserById } = require("../../../lib/users");
+const { toHttpError } = require("../../../lib/http-error");
+
 const taskSchema = {
   type: "object",
-  required: ["id", "owner_user_id", "title", "is_completed", "created_at", "updated_at"],
+  required: ["id", "owner_user_id", "title", "is_completed", "created_at", "updated_at", "access"],
   properties: {
     id: { type: "string", format: "uuid" },
     owner_user_id: { type: "string", format: "uuid" },
@@ -9,6 +13,7 @@ const taskSchema = {
     is_completed: { type: "boolean" },
     created_at: { type: "string" },
     updated_at: { type: "string" },
+    access: { type: "string", enum: ["owner", "shared"] },
   },
 };
 
@@ -40,12 +45,6 @@ const paramsSchema = {
     id: { type: "string", format: "uuid" },
   },
 };
-
-function toHttpError(statusCode, message) {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-}
 
 function getAuthenticatedUserId(request) {
   const userId = request.user.userId || request.user.sub;
@@ -80,11 +79,32 @@ function buildPatchStatement(body) {
   };
 }
 
+async function getTaskForUser(fastify, taskId, userId) {
+  const result = await fastify.db.query(
+    `SELECT id, owner_user_id, title, description, is_completed, created_at, updated_at,
+            CASE WHEN owner_user_id = $2 THEN 'owner' ELSE 'shared' END AS access
+     FROM tasks
+     WHERE id = $1
+       AND (
+         owner_user_id = $2
+         OR EXISTS (
+           SELECT 1
+           FROM task_shares
+           WHERE task_shares.task_id = tasks.id
+             AND task_shares.user_id = $2
+         )
+       )`,
+    [taskId, userId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function tasksRoutes(fastify) {
   fastify.get(
     "/",
     {
-      preHandler: [fastify.authenticate],
+      preHandler: [fastify.authenticate, fastify.rateLimitAuthenticated],
       schema: {
         response: {
           200: {
@@ -98,9 +118,16 @@ async function tasksRoutes(fastify) {
       const ownerUserId = getAuthenticatedUserId(request);
 
       const result = await fastify.db.query(
-        `SELECT id, owner_user_id, title, description, is_completed, created_at, updated_at
+        `SELECT id, owner_user_id, title, description, is_completed, created_at, updated_at,
+                CASE WHEN owner_user_id = $1 THEN 'owner' ELSE 'shared' END AS access
          FROM tasks
          WHERE owner_user_id = $1
+            OR EXISTS (
+              SELECT 1
+              FROM task_shares
+              WHERE task_shares.task_id = tasks.id
+                AND task_shares.user_id = $1
+            )
          ORDER BY created_at DESC`,
         [ownerUserId]
       );
@@ -112,7 +139,7 @@ async function tasksRoutes(fastify) {
   fastify.post(
     "/",
     {
-      preHandler: [fastify.authenticate],
+      preHandler: [fastify.authenticate, fastify.rateLimitAuthenticated],
       schema: {
         body: taskBodySchema,
         response: {
@@ -124,6 +151,25 @@ async function tasksRoutes(fastify) {
       const ownerUserId = getAuthenticatedUserId(request);
       const { title, description = null } = request.body;
 
+      // Plan enforcement is resolved from DB, not from JWT claims.
+      const user = await getUserById(fastify.db, ownerUserId);
+      if (!user) {
+        throw toHttpError(401, "Authentication required", "UNAUTHORIZED");
+      }
+
+      const cap = getTaskCapForPlan(user.plan);
+      const countResult = await fastify.db.query(
+        `SELECT COUNT(*)::int AS count
+         FROM tasks
+         WHERE owner_user_id = $1`,
+        [ownerUserId]
+      );
+
+      const ownedCount = countResult.rows[0].count;
+      if (ownedCount >= cap) {
+        throw toHttpError(403, `Task cap reached for plan ${user.plan}`, "PLAN_LIMIT_REACHED");
+      }
+
       const result = await fastify.db.query(
         `INSERT INTO tasks (owner_user_id, title, description)
          VALUES ($1, $2, $3)
@@ -131,14 +177,14 @@ async function tasksRoutes(fastify) {
         [ownerUserId, title, description]
       );
 
-      return reply.status(201).send(result.rows[0]);
+      return reply.status(201).send({ ...result.rows[0], access: "owner" });
     }
   );
 
   fastify.get(
     "/:id",
     {
-      preHandler: [fastify.authenticate],
+      preHandler: [fastify.authenticate, fastify.rateLimitAuthenticated],
       schema: {
         params: paramsSchema,
         response: {
@@ -148,14 +194,7 @@ async function tasksRoutes(fastify) {
     },
     async (request) => {
       const ownerUserId = getAuthenticatedUserId(request);
-      const result = await fastify.db.query(
-        `SELECT id, owner_user_id, title, description, is_completed, created_at, updated_at
-         FROM tasks
-         WHERE id = $1 AND owner_user_id = $2`,
-        [request.params.id, ownerUserId]
-      );
-
-      const task = result.rows[0];
+      const task = await getTaskForUser(fastify, request.params.id, ownerUserId);
       if (!task) {
         throw toHttpError(404, "Task not found");
       }
@@ -167,7 +206,7 @@ async function tasksRoutes(fastify) {
   fastify.patch(
     "/:id",
     {
-      preHandler: [fastify.authenticate],
+      preHandler: [fastify.authenticate, fastify.rateLimitAuthenticated],
       schema: {
         params: paramsSchema,
         body: taskPatchBodySchema,
@@ -178,6 +217,15 @@ async function tasksRoutes(fastify) {
     },
     async (request) => {
       const ownerUserId = getAuthenticatedUserId(request);
+      const existing = await getTaskForUser(fastify, request.params.id, ownerUserId);
+      if (!existing) {
+        throw toHttpError(404, "Task not found");
+      }
+
+      if (existing.access === "shared") {
+        throw toHttpError(403, "Shared tasks are read-only", "TASK_SHARED_READ_ONLY");
+      }
+
       const { setClause, values } = buildPatchStatement(request.body);
 
       if (!setClause) {
@@ -197,20 +245,29 @@ async function tasksRoutes(fastify) {
         throw toHttpError(404, "Task not found");
       }
 
-      return task;
+      return { ...task, access: "owner" };
     }
   );
 
   fastify.delete(
     "/:id",
     {
-      preHandler: [fastify.authenticate],
+      preHandler: [fastify.authenticate, fastify.rateLimitAuthenticated],
       schema: {
         params: paramsSchema,
       },
     },
     async (request, reply) => {
       const ownerUserId = getAuthenticatedUserId(request);
+
+      const existing = await getTaskForUser(fastify, request.params.id, ownerUserId);
+      if (!existing) {
+        throw toHttpError(404, "Task not found");
+      }
+
+      if (existing.access === "shared") {
+        throw toHttpError(403, "Shared tasks are read-only", "TASK_SHARED_READ_ONLY");
+      }
 
       const result = await fastify.db.query(
         `DELETE FROM tasks

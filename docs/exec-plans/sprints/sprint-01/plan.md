@@ -1,6 +1,6 @@
 # Sprint 01 plan (archived)
 
-NOTE: The canonical current sprint file is `docs/exec-plans/SPRINT.md`. Sprint 02 planning lives in `docs/exec-plans/SPRINT-02-PREVIEW.md`.
+NOTE: The canonical sprint file is `docs/exec-plans/SPRINT.md`. `docs/exec-plans/SPRINT-02-PREVIEW.md` is deprecated and kept only for history.
 
 Goal: ship a runnable MVP quickly, starting with a minimal backend so the frontend uses real endpoints.
 

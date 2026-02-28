@@ -31,20 +31,45 @@ async function getSafeFilePath(frontendRoot, relativePath) {
   }
 }
 
-function sendFile(reply, filePath) {
+async function sendFile(reply, filePath) {
   const extension = path.extname(filePath);
   const contentType = CONTENT_TYPES[extension] || "application/octet-stream";
 
+  // Fastify can stream without Content-Length, but we set it explicitly here
+  // because some environments otherwise end up sending an empty body.
+  const stats = await fsPromises.stat(filePath);
+  reply.header("content-length", String(stats.size));
+
   reply.type(contentType);
-  reply.send(fs.createReadStream(filePath));
+  return reply.send(fs.createReadStream(filePath));
 }
 
 async function serveFrontendAssetsPlugin(fastify) {
-  const frontendRoot = path.resolve(__dirname, "../../../frontend/public");
+  // The repo runs in two layouts:
+  // - local:   <repo>/backend/src/plugins -> ../../../frontend/public
+  // - docker:  /app/src/plugins           -> ../../frontend/public
+  // Approach chosen: pick the first existing candidate.
+  const candidates = [
+    path.resolve(__dirname, "../../frontend/public"),
+    path.resolve(__dirname, "../../../frontend/public"),
+    path.resolve(process.cwd(), "frontend/public"),
+  ];
+
+  const frontendRoot = candidates.find((p) => {
+    try {
+      return fs.existsSync(p);
+    } catch {
+      return false;
+    }
+  });
+
+  if (!frontendRoot) {
+    throw new Error("frontend/public directory not found");
+  }
   const indexPath = path.resolve(frontendRoot, "index.html");
 
   fastify.get("/", async (_request, reply) => {
-    sendFile(reply, indexPath);
+    return sendFile(reply, indexPath);
   });
 
   fastify.get("/*", async (request, reply) => {
@@ -57,11 +82,10 @@ async function serveFrontendAssetsPlugin(fastify) {
     const filePath = await getSafeFilePath(frontendRoot, wildcardPath);
 
     if (filePath) {
-      sendFile(reply, filePath);
-      return;
+      return sendFile(reply, filePath);
     }
 
-    sendFile(reply, indexPath);
+    return sendFile(reply, indexPath);
   });
 }
 

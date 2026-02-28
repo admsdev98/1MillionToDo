@@ -17,7 +17,9 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       PORT: 3000
-      JWT_SECRET: ${JWT_SECRET:-change-me}
+      # Note: the Docker image sets NODE_ENV=production, so JWT_SECRET must not be the default.
+      # This is a demo value (not a real secret). Override via env for anything serious.
+      JWT_SECRET: ${JWT_SECRET:-dev-insecure-change-this}
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@db:5432/todo_app}
     ports:
       - "3000:3000"

@@ -1,0 +1,12 @@
+HTTP/1.1 201 Created
+content-type: application/json; charset=utf-8
+x-content-type-options: nosniff
+referrer-policy: no-referrer
+x-frame-options: DENY
+content-security-policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'
+content-length: 261
+Date: Sat, 28 Feb 2026 13:46:06 GMT
+Connection: keep-alive
+Keep-Alive: timeout=72
+
+{"id":"ae824847-5869-4d00-9de0-9f2492a62ddb","owner_user_id":"02c908d1-fd2b-4b14-b861-65d567333fa8","title":"after-upgrade","is_completed":false,"created_at":"2026-02-28T13:46:06.076Z","updated_at":"2026-02-28T13:46:06.076Z","access":"owner","description":null}
