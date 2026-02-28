@@ -17,6 +17,19 @@ Este repositorio contiene una prueba tecnica: una API de To Do List multi-tenant
 - Normas (ES): `docs/es/`
 - Planificacion/ejecucion: `docs/exec-plans/`
 
+Guias de instalacion:
+- EN: `docs/en/local-docker-setup.md`
+- ES: `docs/es/local-docker-setup.md`
+
+## Capturas de la UI
+La UI usa idioma por defecto Espanol (ES). Puedes cambiar a Ingles (EN) desde el header.
+
+![Landing (desktop)](docs/screenshots/landing-desktop.png)
+![Dashboard (desktop)](docs/screenshots/dashboard-desktop.png)
+![Task modal](docs/screenshots/task-modal.png)
+![Settings](docs/screenshots/settings.png)
+![Dashboard (mobile)](docs/screenshots/dashboard-mobile.png)
+
 ## Ejecutar (Docker)
 
 Requisitos:

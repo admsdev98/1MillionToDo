@@ -1,0 +1,20 @@
+                                Table "public.tasks"
+    Column     |           Type           | Collation | Nullable |      Default      
+---------------+--------------------------+-----------+----------+-------------------
+ id            | uuid                     |           | not null | gen_random_uuid()
+ owner_user_id | uuid                     |           | not null | 
+ title         | text                     |           | not null | 
+ description   | text                     |           |          | 
+ is_completed  | boolean                  |           | not null | false
+ created_at    | timestamp with time zone |           | not null | now()
+ updated_at    | timestamp with time zone |           | not null | now()
+ due_date      | date                     |           |          | 
+ tag           | text                     |           |          | 
+Indexes:
+    "tasks_pkey" PRIMARY KEY, btree (id)
+    "idx_tasks_owner_user_id" btree (owner_user_id)
+Foreign-key constraints:
+    "tasks_owner_user_id_fkey" FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "task_shares" CONSTRAINT "task_shares_task_id_fkey" FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+

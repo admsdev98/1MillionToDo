@@ -17,6 +17,19 @@ This repository contains a technical assessment: a multi-tenant (per user) To Do
 - Project norms (ES): `docs/es/`
 - Execution planning: `docs/exec-plans/`
 
+Setup guides:
+- EN: `docs/en/local-docker-setup.md`
+- ES: `docs/es/local-docker-setup.md`
+
+## UI screenshots
+The UI default language is Spanish (ES). You can switch to English (EN) from the header.
+
+![Landing (desktop)](docs/screenshots/landing-desktop.png)
+![Dashboard (desktop)](docs/screenshots/dashboard-desktop.png)
+![Task modal](docs/screenshots/task-modal.png)
+![Settings](docs/screenshots/settings.png)
+![Dashboard (mobile)](docs/screenshots/dashboard-mobile.png)
+
 ## Run (Docker)
 
 Prereqs:

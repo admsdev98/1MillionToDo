@@ -1,0 +1,5 @@
+GET / => 200
+GET /auth/login => 200
+GET /app => 200
+GET /missing.css => 404
+GET /v1/health => 200

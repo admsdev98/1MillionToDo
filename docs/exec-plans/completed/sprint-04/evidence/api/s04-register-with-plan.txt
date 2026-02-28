@@ -1,0 +1,12 @@
+HTTP/1.1 201 Created
+content-type: application/json; charset=utf-8
+x-content-type-options: nosniff
+referrer-policy: no-referrer
+x-frame-options: DENY
+content-security-policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'
+content-length: 321
+Date: Sat, 28 Feb 2026 15:54:05 GMT
+Connection: keep-alive
+Keep-Alive: timeout=72
+
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZDk0ZGQ5OC1lZmZjLTRmNmQtYjU1OS1jOWU2MGNlYTk2ZjQiLCJ1c2VySWQiOiI5ZDk0ZGQ5OC1lZmZjLTRmNmQtYjU1OS1jOWU2MGNlYTk2ZjQiLCJwbGFuIjoicHJlbWl1bSIsImVtYWlsIjoicGxhbi10ZXN0LTE3NzIyOTQwNDVAZXhhbXBsZS5jb20iLCJpYXQiOjE3NzIyOTQwNDV9.bdwAC-X653cQT9zoNqkfORzrhlGAL2I1BlVzXLy3SDE"}

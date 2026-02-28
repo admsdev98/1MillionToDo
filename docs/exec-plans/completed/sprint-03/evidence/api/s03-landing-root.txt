@@ -1,0 +1,24 @@
+HTTP/1.1 200 OK
+content-length: 342
+content-type: text/html; charset=utf-8
+x-content-type-options: nosniff
+referrer-policy: no-referrer
+x-frame-options: DENY
+content-security-policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'
+Date: Sat, 28 Feb 2026 15:23:39 GMT
+Connection: keep-alive
+Keep-Alive: timeout=72
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>1Million ToDo</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <div id="app-root"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

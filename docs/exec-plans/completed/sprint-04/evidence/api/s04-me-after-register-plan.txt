@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+x-content-type-options: nosniff
+referrer-policy: no-referrer
+x-frame-options: DENY
+content-security-policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'
+content-length: 105
+Date: Sat, 28 Feb 2026 15:54:06 GMT
+Connection: keep-alive
+Keep-Alive: timeout=72
+
+{"id":"9d94dd98-effc-4f6d-b559-c9e60cea96f4","email":"plan-test-1772294045@example.com","plan":"premium"}
