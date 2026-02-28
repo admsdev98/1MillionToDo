@@ -1,6 +1,6 @@
 # Sprint 01: runnable api with auth and tasks
 
-**Status**: planning
+**Status**: completed
 **Started**: 2026-02-28
 **Goal**: Ship a runnable Dockerized API (db + backend) with JWT register/login, request logging, and owned-task CRUD with strict per-user isolation.
 
@@ -31,7 +31,7 @@
 4. BACK-CARD-004 (tasks CRUD relies on auth + db).
 
 ## Cards
-- [ ] DB-CARD-001: create postgres schema for users, tasks, shares, and password reset
-- [ ] BACK-CARD-002: bootstrap fastify app with db, jwt, and request logger
-- [ ] BACK-CARD-003: implement jwt register and login endpoints
-- [ ] BACK-CARD-004: implement owned tasks crud with strict multi-tenancy
+- [x] DB-CARD-001: create postgres schema for users, tasks, shares, and password reset
+- [x] BACK-CARD-002: bootstrap fastify app with db, jwt, and request logger
+- [x] BACK-CARD-003: implement jwt register and login endpoints
+- [x] BACK-CARD-004: implement owned tasks crud with strict multi-tenancy

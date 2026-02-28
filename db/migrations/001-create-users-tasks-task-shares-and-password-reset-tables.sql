@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS users (
   email text NOT NULL UNIQUE,
   password_hash text NOT NULL,
   password_salt text NOT NULL,
-  role text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   plan text NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'premium', 'enterprise')),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
