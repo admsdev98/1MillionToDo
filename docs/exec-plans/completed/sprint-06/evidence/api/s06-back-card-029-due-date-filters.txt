@@ -2,11 +2,11 @@
 
 ## Register
 curl -s -X POST http://localhost:3000/v1/auth/register -H 'content-type: application/json' -d '{"email":"filter-1772358280@example.com","password":"strong-pass-123"}'
-{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OWU2NjE0Yy1mMWYzLTRmMGMtYTk5ZC0wMDczMWMwZjFjYzciLCJ1c2VySWQiOiI1OWU2NjE0Yy1mMWYzLTRmMGMtYTk5ZC0wMDczMWMwZjFjYzciLCJwbGFuIjoiZnJlZSIsImVtYWlsIjoiZmlsdGVyLTE3NzIzNTgyODBAZXhhbXBsZS5jb20iLCJpYXQiOjE3NzIzNTgyODB9.KSJZTnfUykRGV0HDC758IlcyyGltHul7DMUxvBa82vE"}
+{"token":"<redacted>"}
 
 ## Login
 curl -s -X POST http://localhost:3000/v1/auth/login -H 'content-type: application/json' -d '{"email":"filter-1772358280@example.com","password":"strong-pass-123"}'
-{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OWU2NjE0Yy1mMWYzLTRmMGMtYTk5ZC0wMDczMWMwZjFjYzciLCJ1c2VySWQiOiI1OWU2NjE0Yy1mMWYzLTRmMGMtYTk5ZC0wMDczMWMwZjFjYzciLCJwbGFuIjoiZnJlZSIsImVtYWlsIjoiZmlsdGVyLTE3NzIzNTgyODBAZXhhbXBsZS5jb20iLCJpYXQiOjE3NzIzNTgyODF9.9vw36Xwgjb1CdOjc6dIji5t9ruajH9zIIKOK2mEWRWg"}
+{"token":"<redacted>"}
 
 
 ## Create tasks (one without due_date)

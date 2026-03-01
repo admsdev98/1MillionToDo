@@ -13,9 +13,6 @@ This repository contains a technical assessment: a multi-tenant (per user) To Do
 
 ## Documentation
 - Spanish README: `README.es.md`
-- Project norms (EN): `docs/en/`
-- Project norms (ES): `docs/es/`
-- Execution planning: `docs/exec-plans/`
 
 Setup guides:
 - EN: `docs/en/local-docker-setup.md`
