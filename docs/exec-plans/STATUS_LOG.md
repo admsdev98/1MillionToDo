@@ -164,3 +164,11 @@ Entry template:
 - Alternative rejected: Filter by `created_at` first (rejected because it does not express "due in X days" intent) and keep landing visible for authenticated users (rejected because it adds navigation ambiguity and duplicates entry points).
 - Evidence: Sprint 06 cards added under `docs/exec-plans/pending/` and Sprint 06 plan in `docs/exec-plans/SPRINT.md`.
 - Next: Start with `docs/exec-plans/pending/FRONT-CARD-028-redirect-authenticated-root-to-app-and-remove-home-link.md`.
+
+- Date: 2026-03-01
+- Card: EXTRA-TASK-SHARE-PEOPLE-SELECTOR
+- Decision: Add an authenticated users search endpoint (`GET /v1/users/search`) and a multi-select share UI in the task modal.
+- Why: It simplifies sharing a task with one or multiple registered users without manually typing emails each time.
+- Alternative rejected: Add a `display_name` migration first (rejected to keep this extra task small; we derive a friendly name from the email local-part).
+- Evidence: `backend/src/v1/routes/users/users.routes.js`, `frontend/public/views/dashboard-view.js`, and `frontend/public/features/tasks/tasks-api.js`.
+- Next: Optionally add persistent user profile names in a future sprint if needed.

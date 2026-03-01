@@ -1,4 +1,4 @@
-import { listTasks, createTask, patchTask, deleteTask, shareTask } from "../features/tasks/tasks-api.js";
+import { listTasks, createTask, patchTask, deleteTask, shareTask, searchUsers } from "../features/tasks/tasks-api.js";
 import { renderTaskCard } from "../features/tasks/task-card.js";
 import { el, setBanner } from "./ui.js";
 import { formatT } from "../shared/i18n.js";
@@ -252,18 +252,19 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   });
 
   const shareField = el("div", { class: "field" });
-  const shareLabel = el("label", { for: "task-modal-share-email", text: t("task.field.shareByEmail") });
-  const shareRow = el("div", { class: "task-modal-inline" });
-  const shareEmailInput = el("input", {
-    id: "task-modal-share-email",
-    name: "share_email",
-    type: "email",
-    autocomplete: "email",
-    placeholder: t("task.placeholder.shareEmail"),
+  const shareLabel = el("label", { for: "task-modal-share-search", text: t("task.field.sharePeople") });
+  const shareSearchInput = el("input", {
+    id: "task-modal-share-search",
+    name: "share_search",
+    type: "text",
+    autocomplete: "off",
+    placeholder: t("task.placeholder.shareSearch"),
   });
-  const shareButton = el("button", { class: "btn btn-ghost", type: "button", text: t("task.action.share") });
-  shareRow.append(shareEmailInput, shareButton);
-  shareField.append(shareLabel, shareRow);
+  const shareState = el("p", { class: "task-hint", text: t("task.share.searchHint") });
+  const shareCandidatesList = el("ul", { class: "share-candidates-list" });
+  const shareSelectedList = el("div", { class: "share-selected-list" });
+  const shareButton = el("button", { class: "btn btn-ghost", type: "button", text: t("task.action.shareSelected") });
+  shareField.append(shareLabel, shareSearchInput, shareState, shareCandidatesList, shareSelectedList, shareButton);
 
   const modalActions = el("div", { class: "task-modal-actions" });
   const closeButton = el("button", { class: "btn btn-ghost", type: "button", text: t("task.action.close") });
@@ -328,6 +329,113 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   let hasAttemptedDemoUsersLoad = false;
   let dueFromFilter = null;
   let dueToFilter = null;
+  let shareCandidates = [];
+  let selectedRecipients = [];
+  let shareSearchTimeoutId = null;
+
+  function renderSelectedRecipients() {
+    shareSelectedList.innerHTML = "";
+
+    for (const recipient of selectedRecipients) {
+      const chip = el("div", { class: "share-selected-chip" });
+      const label = el("span", { text: `${recipient.name} (${recipient.email})` });
+      const removeButton = el("button", {
+        class: "share-selected-remove",
+        type: "button",
+        "aria-label": formatT("task.share.removeAria", { name: recipient.name }),
+        text: "x",
+      });
+
+      removeButton.addEventListener("click", () => {
+        selectedRecipients = selectedRecipients.filter((item) => item.id !== recipient.id);
+        renderSelectedRecipients();
+        renderShareCandidates();
+      });
+
+      chip.append(label, removeButton);
+      shareSelectedList.appendChild(chip);
+    }
+
+    shareButton.disabled = selectedRecipients.length === 0;
+  }
+
+  function renderShareCandidates() {
+    shareCandidatesList.innerHTML = "";
+
+    if (!shareCandidates.length) {
+      shareCandidatesList.appendChild(el("li", { class: "share-candidate-empty", text: t("task.share.noResults") }));
+      return;
+    }
+
+    for (const candidate of shareCandidates) {
+      const isAlreadySelected = selectedRecipients.some((item) => item.id === candidate.id);
+      const listItem = el("li", { class: "share-candidate-item" });
+      const button = el("button", {
+        class: "share-candidate-button",
+        type: "button",
+      });
+      const label = el("span", {
+        class: "share-candidate-label",
+        text: `${candidate.name} (${candidate.email})`,
+      });
+      const action = el("span", {
+        class: "share-candidate-action",
+        text: isAlreadySelected ? t("task.share.added") : t("task.share.add"),
+      });
+
+      button.disabled = isAlreadySelected;
+      button.append(label, action);
+      button.addEventListener("click", () => {
+        if (isAlreadySelected) {
+          return;
+        }
+
+        selectedRecipients.push(candidate);
+        renderSelectedRecipients();
+        renderShareCandidates();
+      });
+
+      listItem.appendChild(button);
+      shareCandidatesList.appendChild(listItem);
+    }
+  }
+
+  async function loadShareCandidates(query = "") {
+    const response = await searchUsers(apiFetch, query);
+    if (!response.ok) {
+      if (shouldOpenForbidden(response)) {
+        navigate("/error/forbidden", { replace: true });
+        return;
+      }
+      if (shouldOpenUnexpected(response)) {
+        navigate("/error/unexpected", {
+          replace: true,
+          state: { message: response.error.message },
+        });
+        return;
+      }
+
+      shareCandidates = [];
+      shareState.textContent = response.error.message;
+      renderShareCandidates();
+      return;
+    }
+
+    shareCandidates = Array.isArray(response.data) ? response.data : [];
+    shareState.textContent = t("task.share.searchHint");
+    renderShareCandidates();
+  }
+
+  function scheduleShareSearchLoad() {
+    const query = shareSearchInput.value.trim();
+    if (shareSearchTimeoutId) {
+      clearTimeout(shareSearchTimeoutId);
+    }
+
+    shareSearchTimeoutId = setTimeout(() => {
+      void loadShareCandidates(query);
+    }, 220);
+  }
 
   function closeMenu() {
     nav.dataset.open = "false";
@@ -368,7 +476,12 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
     modalDescriptionInput.value = task.description || "";
     modalDueDateInput.value = task.due_date || "";
     modalTagInput.value = task.tag ? String(task.tag).toUpperCase() : "";
-    shareEmailInput.value = "";
+    shareSearchInput.value = "";
+    selectedRecipients = [];
+    shareCandidates = [];
+    shareState.textContent = t("task.share.searchHint");
+    renderSelectedRecipients();
+    renderShareCandidates();
 
     const isShared = task.access === "shared";
     modalAccessBadge.textContent = isShared ? t("task.access.shared") : t("task.access.owned");
@@ -383,6 +496,10 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
     saveButton.style.display = isShared ? "none" : "inline-flex";
     deleteButton.style.display = isShared ? "none" : "inline-flex";
     modalReadOnlyHint.style.display = isShared ? "block" : "none";
+
+    if (!isShared) {
+      void loadShareCandidates();
+    }
 
     modalBackdrop.classList.remove("task-modal-backdrop-hidden");
   }
@@ -399,6 +516,16 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   modalBackdrop.addEventListener("click", (event) => {
     if (event.target === modalBackdrop) {
       closeModal();
+    }
+  });
+
+  shareSearchInput.addEventListener("input", () => {
+    scheduleShareSearchLoad();
+  });
+
+  shareSearchInput.addEventListener("focus", () => {
+    if (!shareCandidates.length) {
+      void loadShareCandidates(shareSearchInput.value.trim());
     }
   });
 
@@ -614,17 +741,22 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
       return;
     }
 
-    const email = shareEmailInput.value.trim().toLowerCase();
-    if (!email) {
-      setBanner(banner, { kind: "error", message: t("task.banner.shareNeedEmail") });
+    if (!selectedRecipients.length) {
+      setBanner(banner, { kind: "error", message: t("task.banner.shareSelectRequired") });
       return;
     }
 
     shareButton.disabled = true;
-    const shareResponse = await shareTask(apiFetch, selectedTask.id, email);
-    shareButton.disabled = false;
+    let sharedCount = 0;
+    let failedCount = 0;
 
-    if (!shareResponse.ok) {
+    for (const recipient of selectedRecipients) {
+      const shareResponse = await shareTask(apiFetch, selectedTask.id, recipient.email);
+      if (shareResponse.ok) {
+        sharedCount += 1;
+        continue;
+      }
+
       if (shouldOpenForbidden(shareResponse)) {
         navigate("/error/forbidden", { replace: true });
         return;
@@ -637,12 +769,41 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
         return;
       }
 
-      setBanner(banner, { kind: "error", message: shareResponse.error.message });
+      failedCount += 1;
+    }
+
+    shareButton.disabled = false;
+
+    if (!sharedCount && failedCount) {
+      setBanner(banner, { kind: "error", message: t("task.banner.shareAllFailed") });
       return;
     }
 
-    setBanner(banner, { kind: "success", message: formatT("task.banner.shared", { email }) });
-    shareEmailInput.value = "";
+    if (failedCount > 0) {
+      setBanner(
+        banner,
+        {
+          kind: "warning",
+          message: formatT("task.banner.sharedPartial", {
+            shared: sharedCount,
+            failed: failedCount,
+          }),
+        }
+      );
+    } else {
+      setBanner(
+        banner,
+        {
+          kind: "success",
+          message: formatT("task.banner.sharedMultiple", { count: sharedCount }),
+        }
+      );
+    }
+
+    selectedRecipients = [];
+    shareSearchInput.value = "";
+    renderSelectedRecipients();
+    await loadShareCandidates();
   });
 
   form.addEventListener("submit", async (event) => {

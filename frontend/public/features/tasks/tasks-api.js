@@ -47,3 +47,14 @@ export async function shareTask(apiFetch, taskId, email) {
     body: JSON.stringify({ email }),
   });
 }
+
+export async function searchUsers(apiFetch, query = "") {
+  const params = new URLSearchParams();
+  if (query && query.trim()) {
+    params.set("q", query.trim());
+  }
+
+  const queryString = params.toString();
+  const path = queryString ? `/v1/users/search?${queryString}` : "/v1/users/search";
+  return apiFetch(path);
+}
