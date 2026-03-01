@@ -12,6 +12,7 @@ const debugRoutes = require("./v1/routes/debug/debug.routes");
 const meRoutes = require("./v1/routes/me/me.routes");
 const tasksRoutes = require("./v1/routes/tasks/tasks.routes");
 const taskSharingRoutes = require("./v1/routes/tasks/task-sharing.routes");
+const usersRoutes = require("./v1/routes/users/users.routes");
 
 function toErrorCode(error, statusCode) {
   // Routes/plugins can set `error.errorCode` to force a stable contract code
@@ -101,6 +102,10 @@ async function buildApp(options = {}) {
 
   app.register(meRoutes, {
     prefix: "/v1",
+  });
+
+  app.register(usersRoutes, {
+    prefix: "/v1/users",
   });
 
   app.register(tasksRoutes, {
