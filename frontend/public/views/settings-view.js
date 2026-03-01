@@ -64,9 +64,8 @@ export function renderSettingsView(root, { apiFetch, navigate, onLogout, onToggl
 
   const shell = el("div", { class: "dashboard-shell page-fade" });
   const header = el("header", { class: "dashboard-header" });
-  const brand = el("a", { class: "brand-link", href: "/", "data-link": "true", text: "1Million ToDo" });
+  const brand = el("a", { class: "brand-link", href: "/app", "data-link": "true", text: "1Million ToDo" });
   const nav = el("nav", { class: "dashboard-nav", "aria-label": t("nav.settings") });
-  const homeLink = el("a", { class: "dashboard-link", href: "/", "data-link": "true", text: t("nav.home") });
   const dashboardLink = el("a", { class: "dashboard-link", href: "/app", "data-link": "true", text: t("nav.dashboard") });
   const settingsLink = el("a", {
     class: "dashboard-link dashboard-link-active",
@@ -83,7 +82,7 @@ export function renderSettingsView(root, { apiFetch, navigate, onLogout, onToggl
 
   const logoutButton = el("button", { class: "btn btn-ghost", type: "button", text: t("nav.logout") });
   logoutButton.addEventListener("click", onLogout);
-  nav.append(homeLink, dashboardLink, settingsLink, languageToggle, logoutButton);
+  nav.append(dashboardLink, settingsLink, languageToggle, logoutButton);
   header.append(brand, nav);
 
   const banner = el("div", {

@@ -20,8 +20,8 @@ function getErrorConfig(kind, isAuthenticated, t) {
       body: t("error.unexpected.body"),
       primaryHref: isAuthenticated ? "/app" : "/auth/login",
       primaryLabel: isAuthenticated ? t("error.action.retryInDashboard") : t("error.action.goToLogin"),
-      secondaryHref: "/",
-      secondaryLabel: t("error.action.backToHome"),
+      secondaryHref: isAuthenticated ? "/app" : "/",
+      secondaryLabel: isAuthenticated ? t("error.action.backToDashboard") : t("error.action.backToHome"),
     };
   }
 

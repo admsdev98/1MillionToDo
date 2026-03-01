@@ -82,6 +82,13 @@ async function renderCurrentRoute() {
   const isAuthenticated = Boolean(authStore.getToken());
   const language = getLanguage();
 
+  // Product "home" lives at /app. Keep landing for unauthenticated users only.
+  if (route.id === "landing" && isAuthenticated) {
+    window.history.replaceState(null, "", "/app");
+    void renderCurrentRoute();
+    return;
+  }
+
   if ((route.id === "dashboard" || route.id === "settings") && !isAuthenticated) {
     navigate("/auth/login", { replace: true });
     return;
