@@ -154,5 +154,13 @@ Entry template:
 - Decision: Cancel CARD-022 and split it into FRONT-CARD-023 through FRONT-CARD-027 for Sprint 05.
 - Why: CARD-022 mixed five UI deliverables, making verification and one-card kanban execution too risky.
 - Alternative rejected: Keep one large card and finish it in one pass (rejected because acceptance evidence would be weak and failures would be harder to isolate).
-- Evidence: `docs/exec-plans/completed/sprint-04/FRONT-CARD-022-add-dashboard-modals-edit-delete-status-settings-and-help.md` and new cards in `docs/exec-plans/pending/`.
-- Next: Execute Sprint 05 cards in order (023 -> 027) with per-card evidence files.
+  - Evidence: `docs/exec-plans/completed/sprint-04/FRONT-CARD-022-add-dashboard-modals-edit-delete-status-settings-and-help.md` and new cards in `docs/exec-plans/pending/`.
+  - Next: Execute Sprint 05 cards in order (023 -> 027) with per-card evidence files.
+
+- Date: 2026-03-01
+- Card: SPRINT-06-PLANNING
+- Decision: Add task list filtering using `due_date` as the primary date field (`due_from`/`due_to`, inclusive) and redirect authenticated users from `/` to `/app` to avoid showing the landing page after sign-in.
+- Why: `due_date` is already defined as a date-only field in the product (deadline day), so it matches the "filter by days" requirement without timezone ambiguity; redirecting `/` for authenticated users removes a confusing post-login state and makes `/app` the product home.
+- Alternative rejected: Filter by `created_at` first (rejected because it does not express "due in X days" intent) and keep landing visible for authenticated users (rejected because it adds navigation ambiguity and duplicates entry points).
+- Evidence: Sprint 06 cards added under `docs/exec-plans/pending/` and Sprint 06 plan in `docs/exec-plans/SPRINT.md`.
+- Next: Start with `docs/exec-plans/pending/FRONT-CARD-028-redirect-authenticated-root-to-app-and-remove-home-link.md`.

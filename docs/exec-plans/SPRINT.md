@@ -1,45 +1,34 @@
-# Sprint 05: final dashboard and settings UI delivery
+# Sprint 06: navigation fixes, due date filters, and mobile UX polish
 
-**Status**: completed
-**Started**: 2026-02-28
-**Completed**: 2026-02-28
-**Goal**: Deliver the missing ToDo UI functionality for task details/edit/delete/share, richer previews and create form, settings route, and floating help panel.
+**Status**: planning
+**Started**: 2026-03-01
+**Goal**: Tighten routing/navigation behavior, add due-date range filtering to tasks, and improve the mobile header + responsive layout.
 
-## Canonical source
-- This file is the canonical Sprint 05 plan.
-- Sprint 04 history is archived in `docs/exec-plans/completed/sprint-04/SPRINT.md`.
+## What's included
+- Redirect authenticated users from `/` to `/app`, and simplify app navigation (no Home/Inicio link).
+- Add `due_from` / `due_to` filters to `GET /v1/tasks` (inclusive, validated).
+- Add dashboard UI controls for due-date filtering.
+- Replace app-page header nav with a mobile hamburger menu.
+- Mobile responsive audit + targeted fixes across all routes.
 
-## Scope
-- Frontend-only UX completion for dashboard and settings routes.
-- No new dependencies.
-- Use current backend endpoints as-is.
+## What's NOT included
+- New dependencies or build tooling.
+- Pagination/sorting redesign for tasks.
+- Major visual redesign of landing/auth pages.
 
 ## Cards
-- [x] FRONT-CARD-023: add task detail modal with edit, delete, and share
-- [x] FRONT-CARD-024: show task status, tag, and due date in task cards
-- [x] FRONT-CARD-025: upgrade create task form with due date, tag, and share email
-- [x] FRONT-CARD-026: add settings route with plan and request logs
-- [x] FRONT-CARD-027: add floating help panel for demo users and sharing
+- [ ] FRONT-CARD-028: redirect authenticated root to app and remove home link
+- [ ] BACK-CARD-029: add due date filters to list tasks endpoint
+- [ ] FRONT-CARD-030: add dashboard due date filters UI
+- [ ] FRONT-CARD-031: add mobile hamburger menu to app header
+- [ ] FRONT-CARD-032: mobile responsive audit and fixes
 
 ## Recommended execution order
-1. FRONT-CARD-023
-2. FRONT-CARD-024
-3. FRONT-CARD-025
-4. FRONT-CARD-026
-5. FRONT-CARD-027
+1. FRONT-CARD-028
+2. BACK-CARD-029
+3. FRONT-CARD-030
+4. FRONT-CARD-031
+5. FRONT-CARD-032
 
-## Definition of done
-- Task cards are clickable and open a detail modal.
-- Owned tasks can be edited, deleted, and shared by email from the modal.
-- Shared tasks are clearly read-only in cards and modal.
-- Task previews show status (Open/Done/Overdue), tag, and due date.
-- Create task flow supports description textarea, due date, tag, and optional share email with partial-success feedback.
-- `/app/settings` route is auth-gated and supports plan updates and request log viewing.
-- Dashboard includes a floating help panel that tries `/v1/debug/users` and degrades gracefully when unavailable.
-- Each completed card includes evidence under `docs/exec-plans/completed/sprint-05/evidence/`.
-
-## Manual regression checklist
-- Login -> dashboard -> create/edit/delete/share task still works.
-- Shared task remains read-only in list and modal.
-- Settings route loads, updates plan, and renders request logs.
-- Help panel opens/closes and handles debug endpoint unavailable state.
+## Notes
+- Sprint 05 is archived at `docs/exec-plans/completed/sprint-05/SPRINT.md`.
