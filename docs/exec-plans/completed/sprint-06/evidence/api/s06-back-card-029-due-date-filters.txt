@@ -1,0 +1,40 @@
+# BACK-CARD-029 evidence: due date filters
+
+## Register
+curl -s -X POST http://localhost:3000/v1/auth/register -H 'content-type: application/json' -d '{"email":"filter-1772358280@example.com","password":"strong-pass-123"}'
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OWU2NjE0Yy1mMWYzLTRmMGMtYTk5ZC0wMDczMWMwZjFjYzciLCJ1c2VySWQiOiI1OWU2NjE0Yy1mMWYzLTRmMGMtYTk5ZC0wMDczMWMwZjFjYzciLCJwbGFuIjoiZnJlZSIsImVtYWlsIjoiZmlsdGVyLTE3NzIzNTgyODBAZXhhbXBsZS5jb20iLCJpYXQiOjE3NzIzNTgyODB9.KSJZTnfUykRGV0HDC758IlcyyGltHul7DMUxvBa82vE"}
+
+## Login
+curl -s -X POST http://localhost:3000/v1/auth/login -H 'content-type: application/json' -d '{"email":"filter-1772358280@example.com","password":"strong-pass-123"}'
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OWU2NjE0Yy1mMWYzLTRmMGMtYTk5ZC0wMDczMWMwZjFjYzciLCJ1c2VySWQiOiI1OWU2NjE0Yy1mMWYzLTRmMGMtYTk5ZC0wMDczMWMwZjFjYzciLCJwbGFuIjoiZnJlZSIsImVtYWlsIjoiZmlsdGVyLTE3NzIzNTgyODBAZXhhbXBsZS5jb20iLCJpYXQiOjE3NzIzNTgyODF9.9vw36Xwgjb1CdOjc6dIji5t9ruajH9zIIKOK2mEWRWg"}
+
+
+## Create tasks (one without due_date)
+curl -s -X POST http://localhost:3000/v1/tasks -H 'content-type: application/json' -H 'Authorization: Bearer <TOKEN>' -d '{...}'
+{"id":"9ead0917-e8ea-4afe-9ef5-283254fff2f6","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"No due date","is_completed":false,"created_at":"2026-03-01T09:44:41.145Z","updated_at":"2026-03-01T09:44:41.145Z","access":"owner","description":null,"due_date":null,"tag":null}
+{"id":"b2cb8cb6-4cc3-43c4-ae1c-d1255a1868db","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"Due 2026-03-01","is_completed":false,"created_at":"2026-03-01T09:44:41.197Z","updated_at":"2026-03-01T09:44:41.197Z","access":"owner","description":null,"due_date":"2026-03-01","tag":null}
+{"id":"12fcfb18-974c-4abf-9036-578999c3a026","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"Due 2026-03-05","is_completed":false,"created_at":"2026-03-01T09:44:41.220Z","updated_at":"2026-03-01T09:44:41.220Z","access":"owner","description":null,"due_date":"2026-03-05","tag":null}
+
+## List tasks (no filters)
+curl -s http://localhost:3000/v1/tasks -H 'Authorization: Bearer <TOKEN>'
+[{"id":"12fcfb18-974c-4abf-9036-578999c3a026","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"Due 2026-03-05","is_completed":false,"created_at":"2026-03-01T09:44:41.220Z","updated_at":"2026-03-01T09:44:41.220Z","access":"owner","description":null,"due_date":"2026-03-05","tag":null},{"id":"b2cb8cb6-4cc3-43c4-ae1c-d1255a1868db","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"Due 2026-03-01","is_completed":false,"created_at":"2026-03-01T09:44:41.197Z","updated_at":"2026-03-01T09:44:41.197Z","access":"owner","description":null,"due_date":"2026-03-01","tag":null},{"id":"9ead0917-e8ea-4afe-9ef5-283254fff2f6","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"No due date","is_completed":false,"created_at":"2026-03-01T09:44:41.145Z","updated_at":"2026-03-01T09:44:41.145Z","access":"owner","description":null,"due_date":null,"tag":null}]
+
+## due_from only
+curl -s 'http://localhost:3000/v1/tasks?due_from=2026-03-02' -H 'Authorization: Bearer <TOKEN>'
+[{"id":"12fcfb18-974c-4abf-9036-578999c3a026","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"Due 2026-03-05","is_completed":false,"created_at":"2026-03-01T09:44:41.220Z","updated_at":"2026-03-01T09:44:41.220Z","access":"owner","description":null,"due_date":"2026-03-05","tag":null}]
+
+## due_to only
+curl -s 'http://localhost:3000/v1/tasks?due_to=2026-03-02' -H 'Authorization: Bearer <TOKEN>'
+[{"id":"b2cb8cb6-4cc3-43c4-ae1c-d1255a1868db","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"Due 2026-03-01","is_completed":false,"created_at":"2026-03-01T09:44:41.197Z","updated_at":"2026-03-01T09:44:41.197Z","access":"owner","description":null,"due_date":"2026-03-01","tag":null}]
+
+## both bounds
+curl -s 'http://localhost:3000/v1/tasks?due_from=2026-03-01&due_to=2026-03-05' -H 'Authorization: Bearer <TOKEN>'
+[{"id":"12fcfb18-974c-4abf-9036-578999c3a026","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"Due 2026-03-05","is_completed":false,"created_at":"2026-03-01T09:44:41.220Z","updated_at":"2026-03-01T09:44:41.220Z","access":"owner","description":null,"due_date":"2026-03-05","tag":null},{"id":"b2cb8cb6-4cc3-43c4-ae1c-d1255a1868db","owner_user_id":"59e6614c-f1f3-4f0c-a99d-00731c0f1cc7","title":"Due 2026-03-01","is_completed":false,"created_at":"2026-03-01T09:44:41.197Z","updated_at":"2026-03-01T09:44:41.197Z","access":"owner","description":null,"due_date":"2026-03-01","tag":null}]
+
+## invalid format
+curl -s 'http://localhost:3000/v1/tasks?due_from=2026-13-40' -H 'Authorization: Bearer <TOKEN>'
+{"error":{"code":"VALIDATION_ERROR","message":"Invalid request payload"}}
+
+## invalid range (from > to)
+curl -s 'http://localhost:3000/v1/tasks?due_from=2026-03-10&due_to=2026-03-01' -H 'Authorization: Bearer <TOKEN>'
+{"error":{"code":"DUE_DATE_RANGE_INVALID","message":"Invalid due date range"}}

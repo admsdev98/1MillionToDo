@@ -52,6 +52,15 @@ const paramsSchema = {
   },
 };
 
+const listTasksQuerySchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    due_from: { type: "string", format: "date" },
+    due_to: { type: "string", format: "date" },
+  },
+};
+
 function getAuthenticatedUserId(request) {
   const userId = request.user.userId || request.user.sub;
   if (!userId) {
@@ -120,6 +129,7 @@ async function tasksRoutes(fastify) {
     {
       preHandler: [fastify.authenticate, fastify.rateLimitAuthenticated],
       schema: {
+        querystring: listTasksQuerySchema,
         response: {
           200: {
             type: "array",
@@ -131,23 +141,52 @@ async function tasksRoutes(fastify) {
     async (request) => {
       const ownerUserId = getAuthenticatedUserId(request);
 
-      const result = await fastify.db.query(
-        `SELECT id, owner_user_id, title, description, is_completed, due_date, tag, created_at, updated_at,
-                CASE WHEN owner_user_id = $1 THEN 'owner' ELSE 'shared' END AS access
-         FROM tasks
-         WHERE owner_user_id = $1
+       const dueFrom = request.query && request.query.due_from ? request.query.due_from : null;
+       const dueTo = request.query && request.query.due_to ? request.query.due_to : null;
+
+       if (dueFrom && dueTo && dueFrom > dueTo) {
+         throw toHttpError(400, "Invalid due date range", "DUE_DATE_RANGE_INVALID");
+       }
+
+       const values = [ownerUserId];
+       const filters = [];
+
+       if (dueFrom || dueTo) {
+         filters.push("tasks.due_date IS NOT NULL");
+       }
+
+       if (dueFrom) {
+         values.push(dueFrom);
+         filters.push(`tasks.due_date >= $${values.length}`);
+       }
+
+       if (dueTo) {
+         values.push(dueTo);
+         filters.push(`tasks.due_date <= $${values.length}`);
+       }
+
+       const filterSql = filters.length ? `AND ${filters.join(" AND ")}` : "";
+
+       const result = await fastify.db.query(
+         `SELECT id, owner_user_id, title, description, is_completed, due_date, tag, created_at, updated_at,
+                 CASE WHEN owner_user_id = $1 THEN 'owner' ELSE 'shared' END AS access
+          FROM tasks
+          WHERE (
+            owner_user_id = $1
             OR EXISTS (
               SELECT 1
               FROM task_shares
               WHERE task_shares.task_id = tasks.id
                 AND task_shares.user_id = $1
             )
-         ORDER BY created_at DESC`,
-        [ownerUserId]
-      );
+          )
+          ${filterSql}
+          ORDER BY created_at DESC`,
+         values
+       );
 
-      return result.rows;
-    }
+       return result.rows;
+     }
   );
 
   fastify.post(
