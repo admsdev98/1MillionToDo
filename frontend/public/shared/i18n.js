@@ -74,6 +74,12 @@ const DICTIONARY = {
     "dashboard.account.line": "Signed in as {email} - plan {plan}",
     "dashboard.empty": "No tasks yet. Create your first one on the right.",
 
+    "filters.dueFrom": "Due from",
+    "filters.dueTo": "Due to",
+    "filters.apply": "Apply",
+    "filters.clear": "Clear",
+    "filters.invalidRange": "Invalid range: due from must be on or before due to.",
+
     "task.create.title": "Add a task",
     "task.create.subtitle": "Create a task and optionally share it.",
     "task.field.title": "Title",
@@ -231,6 +237,12 @@ const DICTIONARY = {
     "dashboard.account.failed": "No se pudo cargar la cuenta.",
     "dashboard.account.line": "Sesion iniciada: {email} - plan {plan}",
     "dashboard.empty": "Aun no hay tareas. Crea la primera en el panel derecho.",
+
+    "filters.dueFrom": "Vence desde",
+    "filters.dueTo": "Vence hasta",
+    "filters.apply": "Aplicar",
+    "filters.clear": "Limpiar",
+    "filters.invalidRange": "Rango invalido: la fecha desde debe ser anterior o igual a hasta.",
 
     "task.create.title": "Nueva tarea",
     "task.create.subtitle": "Crea una tarea y, si quieres, compartela.",

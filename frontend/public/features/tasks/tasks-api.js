@@ -1,5 +1,19 @@
-export async function listTasks(apiFetch) {
-  return apiFetch("/v1/tasks");
+export async function listTasks(apiFetch, filters = null) {
+  if (!filters) {
+    return apiFetch("/v1/tasks");
+  }
+
+  const params = new URLSearchParams();
+  if (filters.due_from) {
+    params.set("due_from", filters.due_from);
+  }
+  if (filters.due_to) {
+    params.set("due_to", filters.due_to);
+  }
+
+  const query = params.toString();
+  const path = query ? `/v1/tasks?${query}` : "/v1/tasks";
+  return apiFetch(path);
 }
 
 export async function createTask(apiFetch, { title, description, due_date, tag }) {

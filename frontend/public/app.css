@@ -539,6 +539,22 @@ textarea {
   gap: var(--spacing-3);
 }
 
+.task-filters {
+  margin-top: var(--spacing-3);
+}
+
+.task-filters-row {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.task-filters-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-2);
+}
+
 .task-form {
   margin-top: var(--spacing-4);
   display: grid;
@@ -786,6 +802,11 @@ textarea {
 @media (min-width: 640px) {
   .task-modal-inline {
     grid-template-columns: 1fr auto;
+  }
+
+  .task-filters-row {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
   }
 }
 

@@ -61,9 +61,38 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
     el("p", { class: "dashboard-subtitle", text: t("dashboard.subtitle") }),
   ]);
 
+  const filtersBox = el("div", { class: "task-filters" });
+  const filtersRow = el("div", { class: "task-filters-row" });
+
+  const dueFromField = el("div", { class: "field" });
+  const dueFromLabel = el("label", { for: "task-filter-due-from", text: t("filters.dueFrom") });
+  const dueFromInput = el("input", {
+    id: "task-filter-due-from",
+    name: "due_from",
+    type: "date",
+  });
+  dueFromField.append(dueFromLabel, dueFromInput);
+
+  const dueToField = el("div", { class: "field" });
+  const dueToLabel = el("label", { for: "task-filter-due-to", text: t("filters.dueTo") });
+  const dueToInput = el("input", {
+    id: "task-filter-due-to",
+    name: "due_to",
+    type: "date",
+  });
+  dueToField.append(dueToLabel, dueToInput);
+
+  const filtersActions = el("div", { class: "task-filters-actions" });
+  const applyFiltersButton = el("button", { class: "btn btn-ghost", type: "button", text: t("filters.apply") });
+  const clearFiltersButton = el("button", { class: "btn btn-ghost", type: "button", text: t("filters.clear") });
+  filtersActions.append(applyFiltersButton, clearFiltersButton);
+
+  filtersRow.append(dueFromField, dueToField, filtersActions);
+  filtersBox.appendChild(filtersRow);
+
   const accountLine = el("p", { class: "dashboard-account-line", text: t("dashboard.account.loading") });
   const listBox = el("div", { class: "task-list" });
-  left.append(listHeading, accountLine, listBox);
+  left.append(listHeading, filtersBox, accountLine, listBox);
 
   const formHeading = el("h2", { class: "section-title", text: t("task.create.title") });
   const formSubtitle = el("p", { class: "dashboard-subtitle", text: t("task.create.subtitle") });
@@ -283,6 +312,8 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   const modalAccessBadge = modalHeader.querySelector("#task-modal-access");
   let selectedTask = null;
   let hasAttemptedDemoUsersLoad = false;
+  let dueFromFilter = null;
+  let dueToFilter = null;
 
   function openModal(task) {
     selectedTask = task;
@@ -404,7 +435,10 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   }
 
   async function loadTasks() {
-    const response = await listTasks(apiFetch);
+    const response = await listTasks(apiFetch, {
+      due_from: dueFromFilter,
+      due_to: dueToFilter,
+    });
     if (!response.ok) {
       if (shouldOpenForbidden(response)) {
         navigate("/error/forbidden", { replace: true });
@@ -633,4 +667,28 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
 
   void loadAccountDetails();
   void loadTasks();
+
+  applyFiltersButton.addEventListener("click", async () => {
+    const nextDueFrom = dueFromInput.value || null;
+    const nextDueTo = dueToInput.value || null;
+
+    if (nextDueFrom && nextDueTo && nextDueFrom > nextDueTo) {
+      setBanner(banner, { kind: "error", message: t("filters.invalidRange") });
+      return;
+    }
+
+    setBanner(banner, null);
+    dueFromFilter = nextDueFrom;
+    dueToFilter = nextDueTo;
+    await loadTasks();
+  });
+
+  clearFiltersButton.addEventListener("click", async () => {
+    dueFromFilter = null;
+    dueToFilter = null;
+    dueFromInput.value = "";
+    dueToInput.value = "";
+    setBanner(banner, null);
+    await loadTasks();
+  });
 }
