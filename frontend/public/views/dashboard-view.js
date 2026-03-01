@@ -30,7 +30,21 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   const shell = el("div", { class: "dashboard-shell page-fade" });
   const header = el("header", { class: "dashboard-header" });
   const brand = el("a", { class: "brand-link", href: "/app", "data-link": "true", text: "1Million ToDo" });
-  const nav = el("nav", { class: "dashboard-nav", "aria-label": t("nav.dashboard") });
+  const menuToggle = el("button", {
+    class: "app-menu-toggle",
+    type: "button",
+    "aria-label": t("nav.menu"),
+    "aria-expanded": "false",
+    "aria-controls": "app-header-nav",
+  });
+  menuToggle.append(
+    el("span", { class: "app-menu-bar", "aria-hidden": "true" }),
+    el("span", { class: "app-menu-bar", "aria-hidden": "true" }),
+    el("span", { class: "app-menu-bar", "aria-hidden": "true" })
+  );
+
+  const nav = el("nav", { class: "dashboard-nav", "aria-label": t("nav.dashboard"), id: "app-header-nav" });
+  nav.dataset.open = "false";
   const appLink = el("a", { class: "dashboard-link dashboard-link-active", href: "/app", "data-link": "true", text: t("nav.dashboard") });
   const settingsLink = el("a", { class: "dashboard-link", href: "/app/settings", "data-link": "true", text: t("nav.settings") });
   const languageToggle = el("button", {
@@ -43,7 +57,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   const logoutButton = el("button", { class: "btn btn-ghost", type: "button", text: t("nav.logout") });
   logoutButton.addEventListener("click", onLogout);
   nav.append(appLink, settingsLink, languageToggle, logoutButton);
-  header.append(brand, nav);
+  header.append(brand, menuToggle, nav);
 
   const banner = el("div", {
     class: "banner",
@@ -315,7 +329,40 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   let dueFromFilter = null;
   let dueToFilter = null;
 
+  function closeMenu() {
+    nav.dataset.open = "false";
+    menuToggle.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleMenu() {
+    const isOpen = nav.dataset.open === "true";
+    nav.dataset.open = isOpen ? "false" : "true";
+    menuToggle.setAttribute("aria-expanded", isOpen ? "false" : "true");
+  }
+
+  menuToggle.addEventListener("click", () => {
+    toggleMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    if (nav.dataset.open === "true") {
+      closeMenu();
+    }
+  });
+
+  nav.addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-link]");
+    if (link) {
+      closeMenu();
+    }
+  });
+
   function openModal(task) {
+    closeMenu();
     selectedTask = task;
     modalTitleInput.value = task.title || "";
     modalDescriptionInput.value = task.description || "";
@@ -382,6 +429,7 @@ export function renderDashboardView(root, { apiFetch, navigate, onLogout, onTogg
   }
 
   function openHelpPanel() {
+    closeMenu();
     helpPanel.classList.remove("help-panel-hidden");
     helpButton.setAttribute("aria-expanded", "true");
 

@@ -7,6 +7,7 @@ const DICTIONARY = {
     "nav.dashboard": "Dashboard",
     "nav.settings": "Settings",
     "nav.logout": "Logout",
+    "nav.menu": "Menu",
 
     "landing.action.login": "Login",
     "landing.action.register": "Register",
@@ -171,6 +172,7 @@ const DICTIONARY = {
     "nav.dashboard": "Panel",
     "nav.settings": "Ajustes",
     "nav.logout": "Salir",
+    "nav.menu": "Menu",
 
     "landing.action.login": "Entrar",
     "landing.action.register": "Registro",

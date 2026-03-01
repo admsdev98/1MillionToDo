@@ -65,7 +65,21 @@ export function renderSettingsView(root, { apiFetch, navigate, onLogout, onToggl
   const shell = el("div", { class: "dashboard-shell page-fade" });
   const header = el("header", { class: "dashboard-header" });
   const brand = el("a", { class: "brand-link", href: "/app", "data-link": "true", text: "1Million ToDo" });
-  const nav = el("nav", { class: "dashboard-nav", "aria-label": t("nav.settings") });
+  const menuToggle = el("button", {
+    class: "app-menu-toggle",
+    type: "button",
+    "aria-label": t("nav.menu"),
+    "aria-expanded": "false",
+    "aria-controls": "app-header-nav",
+  });
+  menuToggle.append(
+    el("span", { class: "app-menu-bar", "aria-hidden": "true" }),
+    el("span", { class: "app-menu-bar", "aria-hidden": "true" }),
+    el("span", { class: "app-menu-bar", "aria-hidden": "true" })
+  );
+
+  const nav = el("nav", { class: "dashboard-nav", "aria-label": t("nav.settings"), id: "app-header-nav" });
+  nav.dataset.open = "false";
   const dashboardLink = el("a", { class: "dashboard-link", href: "/app", "data-link": "true", text: t("nav.dashboard") });
   const settingsLink = el("a", {
     class: "dashboard-link dashboard-link-active",
@@ -83,7 +97,7 @@ export function renderSettingsView(root, { apiFetch, navigate, onLogout, onToggl
   const logoutButton = el("button", { class: "btn btn-ghost", type: "button", text: t("nav.logout") });
   logoutButton.addEventListener("click", onLogout);
   nav.append(dashboardLink, settingsLink, languageToggle, logoutButton);
-  header.append(brand, nav);
+  header.append(brand, menuToggle, nav);
 
   const banner = el("div", {
     class: "banner",
@@ -123,6 +137,37 @@ export function renderSettingsView(root, { apiFetch, navigate, onLogout, onToggl
   layout.append(left, right);
   shell.append(header, banner, layout);
   root.appendChild(shell);
+
+  function closeMenu() {
+    nav.dataset.open = "false";
+    menuToggle.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleMenu() {
+    const isOpen = nav.dataset.open === "true";
+    nav.dataset.open = isOpen ? "false" : "true";
+    menuToggle.setAttribute("aria-expanded", isOpen ? "false" : "true");
+  }
+
+  menuToggle.addEventListener("click", () => {
+    toggleMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") {
+      return;
+    }
+    if (nav.dataset.open === "true") {
+      closeMenu();
+    }
+  });
+
+  nav.addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-link]");
+    if (link) {
+      closeMenu();
+    }
+  });
 
   async function loadMe() {
     const meResponse = await apiFetch("/v1/me");

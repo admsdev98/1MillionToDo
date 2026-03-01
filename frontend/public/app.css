@@ -230,11 +230,47 @@ textarea {
 }
 
 .dashboard-nav {
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: var(--spacing-3);
+}
+
+.dashboard-nav[data-open="true"] {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-2);
+  padding-top: var(--spacing-2);
+}
+
+.dashboard-nav[data-open="true"] .dashboard-link,
+.dashboard-nav[data-open="true"] .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.app-menu-toggle {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  border-radius: 14px;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.app-menu-bar {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--color-ink);
+  border-radius: 999px;
 }
 
 .landing-nav-link,
@@ -844,6 +880,24 @@ textarea {
   .landing-nav,
   .dashboard-nav {
     display: inline-flex;
+  }
+
+  .dashboard-nav[data-open="true"] {
+    display: inline-flex;
+    width: auto;
+    padding-top: 0;
+    grid-template-columns: unset;
+    gap: var(--spacing-4);
+  }
+
+  .dashboard-nav[data-open="true"] .dashboard-link,
+  .dashboard-nav[data-open="true"] .btn {
+    width: auto;
+    justify-content: center;
+  }
+
+  .app-menu-toggle {
+    display: none;
   }
 
   .landing-grid {
